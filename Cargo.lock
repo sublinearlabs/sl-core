@@ -158,6 +158,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "p3-goldilocks"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0bc5f4c1d47e22eb0cd6719389d5b02ba5b11305342f755d3ba7094deddb139"
+dependencies = [
+ "num-bigint",
+ "p3-dft",
+ "p3-field",
+ "p3-mds",
+ "p3-poseidon2",
+ "p3-symmetric",
+ "p3-util",
+ "rand",
+ "serde",
+]
+
+[[package]]
 name = "p3-keccak"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -268,6 +285,7 @@ name = "poly"
 version = "0.1.0"
 dependencies = [
  "p3-field",
+ "p3-goldilocks",
 ]
 
 [[package]]
