@@ -8,6 +8,7 @@ pub struct MultilinearPoly<F: Field> {
 }
 
 impl<F: Field> MultilinearPoly<F> {
+    /// Instantiates a `MultilinearPoly` from a vec of field elements
     pub fn new_from_vec(n_vars: usize, evaluations: Vec<F>) -> Self {
         // assert that the number of variables matches the number of evaluations
         assert_eq!(1 << n_vars, evaluations.len());
@@ -17,6 +18,9 @@ impl<F: Field> MultilinearPoly<F> {
         }
     }
 
+    /// Partially fixes variables in the `MultilinearPoly`
+    /// Returns a new `MultilinearPoly` after fixed variables have
+    /// been removed
     pub fn partial_evalute(&self, points: &[F]) -> Self {
         // ensure we don't have more points than variables
         assert!(points.len() <= self.n_vars);
@@ -53,6 +57,8 @@ impl<F: Field> MultilinearPoly<F> {
         }
     }
 
+    /// Fixes all variables in the `MultilinearPoly` return a single
+    /// field element
     pub fn evaluate(&self, points: &[F]) -> F {
         // ensure number of points exactly matches number of variables
         assert_eq!(self.n_vars, points.len());
