@@ -1,9 +1,11 @@
+use std::marker::PhantomData;
+
 use p3_challenger::FieldChallenger;
 use p3_field::{ExtensionField, Field};
 
 pub struct Transcript<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> {
-    base_field: F,
-    extension_field: E,
+    _base_field: PhantomData<F>,
+    _extension_field: PhantomData<E>,
     challenger: FC,
 }
 
@@ -11,8 +13,8 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> Transcript<F, E, FC
     // Instantiate a transcript
     pub fn instantiate(challenger: FC) -> Self {
         Self {
-            base_field: (),
-            extension_field: (),
+            _base_field: PhantomData,
+            _extension_field: PhantomData,
             challenger,
         }
     }
