@@ -5,3 +5,6 @@ members = [
 ]
 
 resolver = "2"
+
+[workspace.dependencies]
+p3-field = "0.2.0"
