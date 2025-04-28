@@ -1,13 +1,13 @@
 use p3_field::Field;
 
-pub struct MLE<F: Field> {
+pub struct MultilinearPoly<F: Field> {
     /// The evaluations of the boolean hypercube {0,1}^n_vars
     evaluations: Vec<F>,
     /// Number of variables
     n_vars: usize,
 }
 
-impl<F: Field> MLE<F> {
+impl<F: Field> MultilinearPoly<F> {
     pub fn new_from_vec(n_vars: usize, evaluations: Vec<F>) -> Self {
         // assert that the number of variables matches the number of evaluations
         assert_eq!(1 << n_vars, evaluations.len());
@@ -30,15 +30,16 @@ impl<F: Field> MLE<F> {
                 let left = new_evaluations[i];
                 let right = new_evaluations[i + mid_point];
                 new_evaluations[i] = match point {
+                    // if the evaluation point is in the boolean hypercube
+                    // return result from table directly
                     a if a.is_zero() => left,
                     a if a.is_one() => right,
-                    _ => {
-                        // linear interpolation
-                        // (1-r) * left + r * right
-                        // left - r.left + r.right
-                        // left - r (left - right)
-                        left - *point * (left - right)
-                    }
+
+                    // linear interpolation
+                    // (1-r) * left + r * right
+                    // left - r.left + r.right
+                    // left - r (left - right)
+                    _ => left - *point * (left - right),
                 }
             }
             mid_point /= 2;
@@ -59,19 +60,14 @@ impl<F: Field> MLE<F> {
     }
 }
 
-// test vectors
-// init with mismatch
-// partial evaluate
-// full evaluation
-
 #[cfg(test)]
 mod tests {
-    use super::MLE;
+    use super::MultilinearPoly;
     use p3_field::AbstractField;
     use p3_goldilocks::Goldilocks as F;
 
-    fn f_abc() -> MLE<F> {
-        MLE::new_from_vec(
+    fn f_abc() -> MultilinearPoly<F> {
+        MultilinearPoly::new_from_vec(
             3,
             vec![0, 0, 0, 3, 0, 0, 2, 5]
                 .into_iter()
@@ -88,7 +84,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_mle_from_vec_var_mismatch() {
-        let _ = MLE::new_from_vec(
+        let _ = MultilinearPoly::new_from_vec(
             3,
             vec![0, 0, 0, 3, 0, 0, 2]
                 .into_iter()
