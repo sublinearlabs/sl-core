@@ -58,3 +58,14 @@ impl<F: Field> MLE<F> {
         self.partial_evalute(points).evaluations[0]
     }
 }
+
+// test vectors
+// init with mismatch
+// partial evaluate
+// full evaluation
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_mle_from_vec() {}
+}
