@@ -1,5 +1,6 @@
 use p3_field::Field;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct MultilinearPoly<F: Field> {
     /// The evaluations of the boolean hypercube {0,1}^n_vars
     evaluations: Vec<F>,
@@ -64,6 +65,12 @@ impl<F: Field> MultilinearPoly<F> {
         assert_eq!(self.n_vars, points.len());
         self.partial_evalute(points).evaluations[0]
     }
+    
+    /// Number of variables in the `MultilinearPoly`
+    pub fn num_vars(&self) -> usize {
+        self.n_vars
+    }
+
 }
 
 #[cfg(test)]
