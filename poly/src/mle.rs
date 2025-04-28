@@ -66,6 +66,56 @@ impl<F: Field> MLE<F> {
 
 #[cfg(test)]
 mod tests {
+    use super::MLE;
+    use p3_field::AbstractField;
+    use p3_goldilocks::Goldilocks as F;
+
+    fn f_abc() -> MLE<F> {
+        MLE::new_from_vec(
+            3,
+            vec![0, 0, 0, 3, 0, 0, 2, 5]
+                .into_iter()
+                .map(F::from_canonical_u64)
+                .collect(),
+        )
+    }
+
     #[test]
-    fn test_mle_from_vec() {}
+    fn test_mle_from_vec() {
+        let _ = f_abc();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_mle_from_vec_var_mismatch() {
+        let _ = MLE::new_from_vec(
+            3,
+            vec![0, 0, 0, 3, 0, 0, 2]
+                .into_iter()
+                .map(F::from_canonical_u64)
+                .collect(),
+        );
+    }
+
+    #[test]
+    fn test_partial_evaluation() {
+        let poly = f_abc();
+        let f_a = poly.partial_evalute(&[F::from_canonical_u64(2), F::from_canonical_u64(3)]);
+        assert_eq!(f_a.evaluations.len(), 2);
+        assert_eq!(
+            f_a.evaluations,
+            &[F::from_canonical_u64(12), F::from_canonical_u64(21)]
+        );
+    }
+
+    #[test]
+    fn test_full_evaluation() {
+        let poly = f_abc();
+        let evaluation = poly.evaluate(&[
+            F::from_canonical_u64(2),
+            F::from_canonical_u64(3),
+            F::from_canonical_u64(4),
+        ]);
+        assert_eq!(evaluation, F::from_canonical_u64(48));
+    }
 }
