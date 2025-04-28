@@ -9,3 +9,5 @@ resolver = "2"
 [workspace.dependencies]
 p3-field = "0.2.0"
 p3-challenger = "0.2.0"
+p3-mersenne-31 = "0.2.0"
+p3-keccak = "0.2.0"
