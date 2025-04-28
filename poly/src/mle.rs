@@ -53,6 +53,8 @@ impl<F: Field> MLE<F> {
     }
 
     pub fn evaluate(&self, points: &[F]) -> F {
-        todo!()
+        // ensure number of points exactly matches number of variables
+        assert_eq!(self.n_vars, points.len());
+        self.partial_evalute(points).evaluations[0]
     }
 }
