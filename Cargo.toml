@@ -1,6 +1,7 @@
-[package]
-name = "sl-core"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = [
+  "transcript",
+  "poly"
+]
 
-[dependencies]
+resolver = "2"
