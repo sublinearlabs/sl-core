@@ -5,11 +5,11 @@ pub struct MLE<F: Field> {
 }
 
 impl<F: Field> MLE<F> {
-    pub fn partial_evalute(points: &[F]) -> F {
+    pub fn partial_evalute(&self, points: &[F]) -> Self {
         todo!()
     }
 
-    pub fn evaluate(points: &[F]) -> F {
+    pub fn evaluate(&self, points: &[F]) -> F {
         todo!()
     }
 }
