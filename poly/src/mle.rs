@@ -153,4 +153,10 @@ mod tests {
         ]);
         assert_eq!(evaluation, F::from_canonical_u64(48));
     }
+
+    #[test]
+    fn test_sum_over_boolean_hypercube() {
+        let poly = f_abc();
+        assert_eq!(poly.sum_over_hypercube(), F::from_canonical_u64(10));
+    }
 }

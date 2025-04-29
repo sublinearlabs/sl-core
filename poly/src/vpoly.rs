@@ -105,14 +105,16 @@ impl<F: Field> MultilinearExtension<F> for VPoly<F> {
         self.max_degree
     }
 
-    // TODO: add documentation
-    fn reduce(&self) -> Vec<F> {
-        let mut result = vec![];
+    /// Returns the sum of evaluations over the boolean hypercube
+    fn sum_over_hypercube(&self) -> F {
+        let mut sum = F::zero();
         for i in 0..(1 << self.num_vars()) {
+            // TODO: get rid of the vec allocation here, maybe make
+            // combine fn take an iterator
             let row = self.mles.iter().map(|p| p[i]).collect::<Vec<F>>();
-            result.push((self.combine_fn)(&row));
+            sum += (self.combine_fn)(&row);
         }
-        result
+        sum
     }
 }
 
@@ -136,7 +138,7 @@ mod tests {
             3,
             vec![0, 0, 0, 3, 0, 0, 2, 5]
                 .into_iter()
-                .map(|n| F::from_canonical_u64(n))
+                .map(F::from_canonical_u64)
                 .collect(),
         )
     }
@@ -148,7 +150,7 @@ mod tests {
             2,
             vec![0, 0, 3, 5]
                 .into_iter()
-                .map(|n| F::from_canonical_u64(n))
+                .map(F::from_canonical_u64)
                 .collect(),
         );
         let mles = vec![f_ab, f_abc()];
