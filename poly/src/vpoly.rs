@@ -5,8 +5,8 @@ use std::{
     rc::Rc,
 };
 
-use crate::MultilinearExtension;
 use crate::mle::MultilinearPoly;
+use crate::MultilinearExtension;
 use p3_field::Field;
 
 pub struct VPoly<F: Field> {
