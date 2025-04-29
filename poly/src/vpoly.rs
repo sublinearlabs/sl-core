@@ -5,6 +5,7 @@ use std::{
     rc::Rc,
 };
 
+use crate::MultilinearExtension;
 use crate::mle::MultilinearPoly;
 use p3_field::Field;
 
@@ -74,9 +75,9 @@ impl<F: Field> VPoly<F> {
     }
 }
 
-impl<F: Field> VPoly<F> {
+impl<F: Field> MultilinearExtension<F> for VPoly<F> {
     /// Evaluates the virtual polynomial at a given point.
-    pub fn evaluate(&self, point: &[F]) -> F {
+    fn evaluate(&self, point: &[F]) -> F {
         let values = self
             .mles
             .iter()
@@ -86,11 +87,11 @@ impl<F: Field> VPoly<F> {
     }
 
     /// Partial evaluation of the virtual polynomial at a given point.
-    pub fn partial_evalute(&self, point: &[F]) -> Self {
+    fn partial_evaluate(&self, point: &[F]) -> Self {
         let values = self
             .mles
             .iter()
-            .map(|mle| mle.partial_evalute(point))
+            .map(|mle| mle.partial_evaluate(point))
             .collect::<Vec<_>>();
 
         Self {
@@ -99,6 +100,23 @@ impl<F: Field> VPoly<F> {
             num_vars: self.num_vars - point.len(),
             combine_fn: self.combine_fn.clone(),
         }
+    }
+
+    /// Poly max degree
+    fn max_degree(&self) -> usize {
+        self.max_degree
+    }
+
+    /// Returns the sum of evaluations over the boolean hypercube
+    fn sum_over_hypercube(&self) -> F {
+        let mut sum = F::zero();
+        for i in 0..(1 << self.num_vars()) {
+            // TODO: get rid of the vec allocation here, maybe make
+            // combine fn take an iterator
+            let row = self.mles.iter().map(|p| p[i]).collect::<Vec<F>>();
+            sum += (self.combine_fn)(&row);
+        }
+        sum
     }
 }
 
@@ -129,7 +147,7 @@ mod tests {
 
     #[test]
     #[should_panic = "MLEs must have the same number of variables"]
-    fn test_varying_lenght() {
+    fn test_varying_length() {
         let f_ab = MultilinearPoly::new_from_vec(
             2,
             vec![0, 0, 3, 5]
@@ -140,7 +158,7 @@ mod tests {
         let mles = vec![f_ab, f_abc()];
         let vpoly = VPoly::new(mles, 1, 3, Rc::new(prod_combined_fn));
         let point = vec![F::from_canonical_u64(1), F::from_canonical_u64(2)];
-        vpoly.partial_evalute(&point);
+        vpoly.partial_evaluate(&point);
     }
 
     #[test]
@@ -175,7 +193,7 @@ mod tests {
                     .collect(),
             ),
         ];
-        assert_eq!(vpoly.partial_evalute(&point).mles(), expected_mles);
+        assert_eq!(vpoly.partial_evaluate(&point).mles(), expected_mles);
     }
 
     #[test]
@@ -202,5 +220,12 @@ mod tests {
         ];
         let expected_mles = F::from_canonical_u64(990);
         assert_eq!(vpoly.evaluate(&points), expected_mles);
+    }
+
+    #[test]
+    fn test_sum_over_boolean_hypercube() {
+        let mles = vec![f_abc(), f_abc(), f_abc()];
+        let vpoly = VPoly::new(mles, 2, 3, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
+        assert_eq!(vpoly.sum_over_hypercube(), F::from_canonical_u64(86));
     }
 }
