@@ -104,6 +104,31 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
         proof: &Self::Proof,
         transcript: &mut Self::Transcript,
     ) -> Result<bool, anyhow::Error> {
-        todo!()
+        // Appends the claimed sum to the transcript
+        transcript.observe_base_element(&[proof.claimed_sum]);
+
+        // Appends the polynomial to the transcript
+        transcript.observe(polynomial.to_bytes());
+
+        let mut claimed_sum = proof.claimed_sum;
+        let mut challenges = Vec::with_capacity(polynomial.num_vars());
+
+        // Perform round by round verification
+        for round_poly in proof.round_polynomials {
+            assert_eq!(claimed_sum, round_poly[0] + round_poly[1]);
+            transcript.observe_base_element(&round_poly);
+            let challenge = transcript.sample_challenge();
+            claimed_sum = barycentric_evaluation(&round_poly, &[challenge]);
+        }
+
+        // Oracle check
+        assert_eq!(claimed_sum, polynomial.evaluate(&challenges));
+
+        Ok(true)
     }
+}
+
+// Evaluate a univariate polynomial in evaluation form
+pub fn barycentric_evaluation<F: Field>(evaluations: &[F], evaluation_points: &[F]) -> F {
+    todo!()
 }
