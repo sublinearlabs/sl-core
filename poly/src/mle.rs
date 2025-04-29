@@ -82,10 +82,11 @@ impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
         1
     }
 
-    // TODO: add documentation
-    fn reduce(&self) -> Vec<F> {
-        // TODO: get rid of this clone
-        self.evaluations.clone()
+    /// Returns the sum of evaluations overr the boolean hypercube
+    fn sum_over_hypercube(&self) -> F {
+        self.evaluations
+            .iter()
+            .fold(F::zero(), |acc, curr| acc + *curr)
     }
 }
 

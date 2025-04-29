@@ -9,6 +9,6 @@ pub trait MultilinearExtension<F> {
     fn partial_evaluate(&self, point: &[F]) -> Self;
     /// Returns the max variable degree
     fn max_degree(&self) -> usize;
-    /// Returns the boolean hypercube evaluations of the structure
-    fn reduce(&self) -> Vec<F>;
+    /// Returns the sum of evaluations over the boolean hypercube
+    fn sum_over_hypercube(&self) -> F;
 }
