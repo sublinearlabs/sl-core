@@ -15,6 +15,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "crunchy"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43da5946c66ffcc7745f48db692ffbb10a83bfe0afd96235c5c2a4fb23994929"
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -109,6 +115,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 
 [[package]]
+name = "p3-challenger"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34060cfb3a04c6ca61f6f5332e0f63e0727c339d4d6b11f70f8b080ce3e3e95d"
+dependencies = [
+ "p3-field",
+ "p3-maybe-rayon",
+ "p3-symmetric",
+ "p3-util",
+ "tracing",
+]
+
+[[package]]
 name = "p3-dft"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -156,6 +175,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "p3-keccak"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6aea637c61ff647f229211551b80d5b17045b6f6f4ffb931698c0f61e3986505"
+dependencies = [
+ "p3-symmetric",
+ "tiny-keccak",
+]
+
+[[package]]
 name = "p3-matrix"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -190,6 +219,26 @@ dependencies = [
  "p3-symmetric",
  "p3-util",
  "rand",
+]
+
+[[package]]
+name = "p3-mersenne-31"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ea1cb85cadd6a14bea84100c70a904fc995c626f9a9d458184714093365d4ab"
+dependencies = [
+ "itertools 0.13.0",
+ "num-bigint",
+ "p3-dft",
+ "p3-field",
+ "p3-matrix",
+ "p3-maybe-rayon",
+ "p3-mds",
+ "p3-poseidon2",
+ "p3-symmetric",
+ "p3-util",
+ "rand",
+ "serde",
 ]
 
 [[package]]
@@ -334,6 +383,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tiny-keccak"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c9d3793400a45f954c52e73d068316d76b6f4e36977e3fcebb13a2721e80237"
+dependencies = [
+ "crunchy",
+]
+
+[[package]]
 name = "tracing"
 version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -367,6 +425,12 @@ dependencies = [
 [[package]]
 name = "transcript"
 version = "0.1.0"
+dependencies = [
+ "p3-challenger",
+ "p3-field",
+ "p3-keccak",
+ "p3-mersenne-31",
+]
 
 [[package]]
 name = "transpose"
