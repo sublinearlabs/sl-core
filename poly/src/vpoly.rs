@@ -8,6 +8,8 @@ use std::{
 use crate::mle::MultilinearPoly;
 use p3_field::Field;
 
+pub type CombineFn<F> = Rc<dyn Fn(&[F]) -> F>;
+
 pub struct VPoly<F: Field> {
     /// The MLEs that make up the virtual polynomial.
     mles: Vec<MultilinearPoly<F>>,
@@ -16,7 +18,7 @@ pub struct VPoly<F: Field> {
     /// Number of variables in the polynomial
     num_vars: usize,
     /// Combination function for evaluating the virtual polynomial.
-    combine_fn: Rc<dyn Fn(&[F]) -> F>,
+    combine_fn: CombineFn<F>,
 }
 
 impl<F: Field + Debug> Debug for VPoly<F> {
@@ -36,7 +38,7 @@ impl<F: Field> VPoly<F> {
         mles: Vec<MultilinearPoly<F>>,
         max_degree: usize,
         num_vars: usize,
-        combine_fn: Rc<dyn Fn(&[F]) -> F>,
+        combine_fn: CombineFn<F>,
     ) -> Self {
         // assert all MLEs have the same number of variables
         assert!(
@@ -120,7 +122,7 @@ mod tests {
             3,
             vec![0, 0, 0, 3, 0, 0, 2, 5]
                 .into_iter()
-                .map(|n| F::from_canonical_u64(n))
+                .map(F::from_canonical_u64)
                 .collect(),
         )
     }
@@ -132,7 +134,7 @@ mod tests {
             2,
             vec![0, 0, 3, 5]
                 .into_iter()
-                .map(|n| F::from_canonical_u64(n))
+                .map(F::from_canonical_u64)
                 .collect(),
         );
         let mles = vec![f_ab, f_abc()];
@@ -162,14 +164,14 @@ mod tests {
                 2,
                 vec![0, 0, 8, 11]
                     .into_iter()
-                    .map(|n| F::from_canonical_u64(n))
+                    .map(F::from_canonical_u64)
                     .collect(),
             ),
             MultilinearPoly::new_from_vec(
                 2,
                 vec![0, 0, 8, 11]
                     .into_iter()
-                    .map(|n| F::from_canonical_u64(n))
+                    .map(F::from_canonical_u64)
                     .collect(),
             ),
         ];
