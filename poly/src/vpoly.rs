@@ -5,8 +5,8 @@ use std::{
     rc::Rc,
 };
 
-use crate::mle::MultilinearPoly;
 use crate::MultilinearExtension;
+use crate::mle::MultilinearPoly;
 use p3_field::Field;
 
 pub struct VPoly<F: Field> {
@@ -108,13 +108,9 @@ impl<F: Field> MultilinearExtension<F> for VPoly<F> {
     // TODO: add documentation
     fn reduce(&self) -> Vec<F> {
         let mut result = vec![];
-        // go over each element in the mle and then use the combine fn
-        // the number of variables tells us the length of each mle evaluation array
-        // now we need to iterate over each poly and then combine
         for i in 0..(1 << self.num_vars()) {
-            let m = self.mles.iter().map(|p| p[i]).collect::<Vec<F>>();
-            let p = (self.combine_fn)(&m);
-            result.push(p);
+            let row = self.mles.iter().map(|p| p[i]).collect::<Vec<F>>();
+            result.push((self.combine_fn)(&row));
         }
         result
     }

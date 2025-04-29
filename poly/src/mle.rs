@@ -77,7 +77,7 @@ impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
         self.partial_evaluate(points).evaluations[0]
     }
 
-    // TODO: add documentation
+    /// Polynomial max variable degree
     fn max_degree(&self) -> usize {
         1
     }
