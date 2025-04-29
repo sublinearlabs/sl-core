@@ -11,4 +11,8 @@ pub trait MultilinearExtension<F> {
     fn max_degree(&self) -> usize;
     /// Returns the sum of evaluations over the boolean hypercube
     fn sum_over_hypercube(&self) -> F;
+    /// Returns the number of variables of the polynomial
+    fn num_vars(&self) -> usize;
+    /// Converts the polynomial to bytes
+    fn to_bytes(&self) -> &[u8];
 }

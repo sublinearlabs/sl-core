@@ -59,11 +59,6 @@ impl<F: Field> VPoly<F> {
         self.max_degree
     }
 
-    /// Number of variables in the polynomial
-    pub fn num_vars(&self) -> usize {
-        self.num_vars
-    }
-
     /// Number of MLEs in the polynomial
     pub fn num_mles(&self) -> usize {
         self.mles.len()
@@ -117,6 +112,16 @@ impl<F: Field> MultilinearExtension<F> for VPoly<F> {
             sum += (self.combine_fn)(&row);
         }
         sum
+    }
+
+    /// Number of variables in the polynomial
+    fn num_vars(&self) -> usize {
+        self.num_vars
+    }
+
+    /// Converts the polynomial to bytes
+    fn to_bytes(&self) -> &[u8] {
+        todo!()
     }
 }
 

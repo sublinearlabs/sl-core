@@ -22,11 +22,6 @@ impl<F: Field> MultilinearPoly<F> {
             n_vars,
         }
     }
-
-    /// Number of variables in the `MultilinearPoly`
-    pub fn num_vars(&self) -> usize {
-        self.n_vars
-    }
 }
 
 impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
@@ -87,6 +82,16 @@ impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
         self.evaluations
             .iter()
             .fold(F::zero(), |acc, curr| acc + *curr)
+    }
+
+    /// Number of variables in the `MultilinearPoly`
+    fn num_vars(&self) -> usize {
+        self.n_vars
+    }
+
+    /// Converts the polynomial to bytes
+    fn to_bytes(&self) -> &[u8] {
+        todo!()
     }
 }
 
