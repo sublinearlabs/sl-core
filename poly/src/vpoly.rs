@@ -219,4 +219,11 @@ mod tests {
         let expected_mles = F::from_canonical_u64(990);
         assert_eq!(vpoly.evaluate(&points), expected_mles);
     }
+
+    #[test]
+    fn test_sum_over_boolean_hypercube() {
+        let mles = vec![f_abc(), f_abc(), f_abc()];
+        let vpoly = VPoly::new(mles, 2, 3, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
+        assert_eq!(vpoly.sum_over_hypercube(), F::from_canonical_u64(86));
+    }
 }
