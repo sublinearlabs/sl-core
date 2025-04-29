@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 p3-field.workspace = true
 anyhow.workspace = true
+transcript.workspace = true
+p3-challenger.workspace = true

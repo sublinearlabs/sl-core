@@ -1,6 +1,8 @@
 //! This module contains the implementation of the sum check protocol.
-use p3_field::Field;
+use p3_challenger::FieldChallenger;
+use p3_field::{ExtensionField, Field};
 use std::marker::PhantomData;
+use transcript::Transcript;
 
 pub trait SumCheckInterface<F: Field> {
     type Polynomial;
@@ -21,11 +23,11 @@ pub trait SumCheckInterface<F: Field> {
     ) -> Result<bool, anyhow::Error>;
 }
 
-pub struct SumCheck<F: Field> {
-    _marker: PhantomData<F>,
+pub struct SumCheck<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> {
+    _marker: PhantomData<(F, E, FC)>,
 }
 
-impl<F: Field> SumCheck<F> {
+impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> SumCheck<F, E, FC> {
     pub fn new() -> Self {
         Self {
             _marker: PhantomData,
@@ -33,9 +35,11 @@ impl<F: Field> SumCheck<F> {
     }
 }
 
-impl<F: Field> SumCheckInterface<F> for SumCheck<F> {
+impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> SumCheckInterface<F>
+    for SumCheck<F, E, FC>
+{
     type Polynomial = ();
-    type Transcript = ();
+    type Transcript = Transcript<F, E, FC>;
     type Proof = ();
 
     fn prove(

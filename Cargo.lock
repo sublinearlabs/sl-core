@@ -382,7 +382,9 @@ name = "sum_check"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "p3-challenger",
  "p3-field",
+ "transcript",
 ]
 
 [[package]]

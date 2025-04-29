@@ -7,8 +7,14 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
+# Plonky3
 p3-field = "0.2.0"
 p3-challenger = "0.2.0"
 p3-mersenne-31 = "0.2.0"
 p3-keccak = "0.2.0"
+
+# Workspace
+transcript = { path = "./transcript" }
+
+# MISC
 anyhow = "1.0.98"
