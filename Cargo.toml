@@ -2,7 +2,7 @@
 members = [
   "transcript",
   "poly"
-]
+, "iops/sum_check"]
 
 resolver = "2"
 
@@ -11,3 +11,4 @@ p3-field = "0.2.0"
 p3-challenger = "0.2.0"
 p3-mersenne-31 = "0.2.0"
 p3-keccak = "0.2.0"
+anyhow = "1.0.98"
