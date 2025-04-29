@@ -73,9 +73,9 @@ impl<F: Field> VPoly<F> {
     }
 }
 
-impl<F: Field> VPoly<F> {
+impl<F: Field> MultilinearExtension<F> for VPoly<F> {
     /// Evaluates the virtual polynomial at a given point.
-    pub fn evaluate(&self, point: &[F]) -> F {
+    fn evaluate(&self, point: &[F]) -> F {
         let values = self
             .mles
             .iter()
@@ -85,7 +85,7 @@ impl<F: Field> VPoly<F> {
     }
 
     /// Partial evaluation of the virtual polynomial at a given point.
-    pub fn partial_evaluate(&self, point: &[F]) -> Self {
+    fn partial_evaluate(&self, point: &[F]) -> Self {
         let values = self
             .mles
             .iter()
@@ -98,6 +98,25 @@ impl<F: Field> VPoly<F> {
             num_vars: self.num_vars - point.len(),
             combine_fn: self.combine_fn.clone(),
         }
+    }
+
+    /// Poly max degree
+    fn max_degree(&self) -> usize {
+        self.max_degree
+    }
+
+    // TODO: add documentation
+    fn reduce(&self) -> Vec<F> {
+        let mut result = vec![];
+        // go over each element in the mle and then use the combine fn
+        // the number of variables tells us the length of each mle evaluation array
+        // now we need to iterate over each poly and then combine
+        for i in 0..(1 << self.num_vars()) {
+            let m = self.mles.iter().map(|p| p[i]).collect::<Vec<F>>();
+            let p = (self.combine_fn)(&m);
+            result.push(p);
+        }
+        result
     }
 }
 
@@ -128,7 +147,7 @@ mod tests {
 
     #[test]
     #[should_panic = "MLEs must have the same number of variables"]
-    fn test_varying_lenght() {
+    fn test_varying_length() {
         let f_ab = MultilinearPoly::new_from_vec(
             2,
             vec![0, 0, 3, 5]

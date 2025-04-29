@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use p3_field::Field;
 
 use crate::MultilinearExtension;
@@ -81,8 +83,17 @@ impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
     }
 
     // TODO: add documentation
-    fn reduce(&self) -> &[F] {
-        &self.evaluations
+    fn reduce(&self) -> Vec<F> {
+        // TODO: get rid of this clone
+        self.evaluations.clone()
+    }
+}
+
+impl<F: Field> Index<usize> for MultilinearPoly<F> {
+    type Output = F;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.evaluations[index]
     }
 }
 
