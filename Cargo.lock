@@ -384,6 +384,7 @@ dependencies = [
  "anyhow",
  "p3-challenger",
  "p3-field",
+ "poly",
  "transcript",
 ]
 

@@ -15,6 +15,7 @@ p3-keccak = "0.2.0"
 
 # Workspace
 transcript = { path = "./transcript" }
+poly = { path = "./poly" }
 
 # MISC
 anyhow = "1.0.98"
