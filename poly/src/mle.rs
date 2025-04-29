@@ -1,5 +1,7 @@
 use p3_field::Field;
 
+use crate::MultilinearExtension;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultilinearPoly<F: Field> {
     /// The evaluations of the boolean hypercube {0,1}^n_vars
@@ -19,10 +21,17 @@ impl<F: Field> MultilinearPoly<F> {
         }
     }
 
+    /// Number of variables in the `MultilinearPoly`
+    pub fn num_vars(&self) -> usize {
+        self.n_vars
+    }
+}
+
+impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
     /// Partially fixes variables in the `MultilinearPoly`
     /// Returns a new `MultilinearPoly` after fixed variables have
     /// been removed
-    pub fn partial_evalute(&self, points: &[F]) -> Self {
+    fn partial_evaluate(&self, points: &[F]) -> Self {
         // ensure we don't have more points than variables
         assert!(points.len() <= self.n_vars);
 
@@ -60,21 +69,27 @@ impl<F: Field> MultilinearPoly<F> {
 
     /// Fixes all variables in the `MultilinearPoly` return a single
     /// field element
-    pub fn evaluate(&self, points: &[F]) -> F {
+    fn evaluate(&self, points: &[F]) -> F {
         // ensure number of points exactly matches number of variables
         assert_eq!(self.n_vars, points.len());
-        self.partial_evalute(points).evaluations[0]
+        self.partial_evaluate(points).evaluations[0]
     }
 
-    /// Number of variables in the `MultilinearPoly`
-    pub fn num_vars(&self) -> usize {
-        self.n_vars
+    // TODO: add documentation
+    fn max_degree(&self) -> usize {
+        1
+    }
+
+    // TODO: add documentation
+    fn reduce(&self) -> &[F] {
+        &self.evaluations
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::MultilinearPoly;
+    use crate::MultilinearExtension;
     use p3_field::AbstractField;
     use p3_goldilocks::Goldilocks as F;
 
@@ -108,7 +123,7 @@ mod tests {
     #[test]
     fn test_partial_evaluation() {
         let poly = f_abc();
-        let f_a = poly.partial_evalute(&[F::from_canonical_u64(2), F::from_canonical_u64(3)]);
+        let f_a = poly.partial_evaluate(&[F::from_canonical_u64(2), F::from_canonical_u64(3)]);
         assert_eq!(f_a.evaluations.len(), 2);
         assert_eq!(
             f_a.evaluations,

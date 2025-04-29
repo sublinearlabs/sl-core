@@ -6,6 +6,7 @@ use std::{
 };
 
 use crate::mle::MultilinearPoly;
+use crate::MultilinearExtension;
 use p3_field::Field;
 
 pub struct VPoly<F: Field> {
@@ -84,11 +85,11 @@ impl<F: Field> VPoly<F> {
     }
 
     /// Partial evaluation of the virtual polynomial at a given point.
-    pub fn partial_evalute(&self, point: &[F]) -> Self {
+    pub fn partial_evaluate(&self, point: &[F]) -> Self {
         let values = self
             .mles
             .iter()
-            .map(|mle| mle.partial_evalute(point))
+            .map(|mle| mle.partial_evaluate(point))
             .collect::<Vec<_>>();
 
         Self {
@@ -138,7 +139,7 @@ mod tests {
         let mles = vec![f_ab, f_abc()];
         let vpoly = VPoly::new(mles, 1, 3, Rc::new(prod_combined_fn));
         let point = vec![F::from_canonical_u64(1), F::from_canonical_u64(2)];
-        vpoly.partial_evalute(&point);
+        vpoly.partial_evaluate(&point);
     }
 
     #[test]
@@ -173,7 +174,7 @@ mod tests {
                     .collect(),
             ),
         ];
-        assert_eq!(vpoly.partial_evalute(&point).mles(), expected_mles);
+        assert_eq!(vpoly.partial_evaluate(&point).mles(), expected_mles);
     }
 
     #[test]
