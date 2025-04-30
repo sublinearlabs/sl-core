@@ -92,6 +92,7 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
                 round_poly.push(value);
             }
             let challenge = transcript.sample_challenge();
+            // TODO: uncomment
             poly = &poly.partial_evaluate(&[challenge]);
             round_polynomials.push(round_poly);
         }
@@ -114,11 +115,12 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
         let mut challenges = Vec::with_capacity(polynomial.num_vars());
 
         // Perform round by round verification
-        for round_poly in proof.round_polynomials {
+        for round_poly in &proof.round_polynomials {
             assert_eq!(claimed_sum, round_poly[0] + round_poly[1]);
             transcript.observe_base_element(&round_poly);
             let challenge = transcript.sample_challenge();
-            claimed_sum = barycentric_evaluation(&round_poly, &[challenge]);
+            claimed_sum = barycentric_evaluation(&round_poly, &challenge);
+            challenges.push(challenge);
         }
 
         // Oracle check
@@ -129,6 +131,52 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
 }
 
 // Evaluate a univariate polynomial in evaluation form
-pub fn barycentric_evaluation<F: Field>(evaluations: &[F], evaluation_points: &[F]) -> F {
-    todo!()
+pub fn barycentric_evaluation<F: Field>(evaluations: &[F], evaluation_point: &F) -> F {
+    let m_x = (0..evaluations.len()).fold(F::one(), |mut acc, val| {
+        acc *= *evaluation_point - F::from_canonical_usize(val);
+        acc
+    });
+
+    let mut res = F::zero();
+
+    for i in 0..evaluations.len() {
+        let numerator = evaluations[i];
+
+        let di = (0..evaluations.len())
+            .into_iter()
+            .filter(|val| *val != i)
+            .fold(F::one(), |mut acc, val| {
+                acc *= F::from_canonical_usize(i) - F::from_canonical_usize(val);
+                acc
+            });
+
+        let denominator = di * (*evaluation_point - F::from_canonical_usize(i));
+
+        res += numerator * denominator.inverse()
+    }
+
+    m_x * res
+}
+
+#[cfg(test)]
+mod tests {
+    use p3_mersenne_31::Mersenne31;
+
+    use crate::barycentric_evaluation;
+
+    #[test]
+    fn test_barycentric_evaluation() {
+        // Polynomial in question: 3x + 2
+        let poly: Vec<Mersenne31> = [2, 3].into_iter().map(|val| Mersenne31::new(val)).collect();
+        let res = barycentric_evaluation(&poly, &Mersenne31::new(5));
+        assert_eq!(res, Mersenne31::new(7));
+
+        // Polynomial in question: 5x^2 + 3x + 2
+        let poly: Vec<Mersenne31> = [2, 10, 28, 56, 94]
+            .into_iter()
+            .map(|val| Mersenne31::new(val))
+            .collect();
+        let res = barycentric_evaluation(&poly, &Mersenne31::new(5));
+        assert_eq!(res, Mersenne31::new(142));
+    }
 }
