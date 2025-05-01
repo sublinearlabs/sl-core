@@ -2,17 +2,17 @@
 use anyhow::Ok;
 use p3_challenger::FieldChallenger;
 use p3_field::{ExtensionField, Field};
-use poly::MultilinearExtension;
+use poly::{Fields, MultilinearExtension};
 use std::marker::PhantomData;
 use transcript::Transcript;
 
-pub struct SumCheckProof<F: Field> {
+pub struct SumCheckProof<F: Field, E: ExtensionField<F>> {
     pub claimed_sum: F,
-    pub round_polynomials: Vec<Vec<F>>,
+    pub round_polynomials: Vec<Vec<Fields<F, E>>>,
 }
 
-impl<F: Field> SumCheckProof<F> {
-    pub fn new(claimed_sum: F, round_polynomials: Vec<Vec<F>>) -> Self {
+impl<F: Field, E: ExtensionField<F>> SumCheckProof<F, E> {
+    pub fn new(claimed_sum: F, round_polynomials: Vec<Vec<Fields<F, E>>>) -> Self {
         Self {
             claimed_sum,
             round_polynomials,
@@ -27,6 +27,7 @@ pub trait SumCheckInterface<F: Field> {
 
     /// Generate proof for a polynomial sum over the bolean hypercube
     fn prove(
+        claimed_sum: F,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error>;
@@ -43,12 +44,12 @@ pub struct SumCheck<
     F: Field,
     E: ExtensionField<F>,
     FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F>,
+    MLE: MultilinearExtension<F, E>,
 > {
     _marker: PhantomData<(F, E, FC, MLE)>,
 }
 
-impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExtension<F>>
+impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExtension<F, E>>
     SumCheck<F, E, FC, MLE>
 {
     pub fn new() -> Self {
@@ -58,20 +59,18 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
     }
 }
 
-impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExtension<F>>
+impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExtension<F, E>>
     SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
 {
     type Polynomial = MLE;
     type Transcript = Transcript<F, E, FC>;
-    type Proof = SumCheckProof<F>;
+    type Proof = SumCheckProof<F, E>;
 
     fn prove(
+        claimed_sum: F,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error> {
-        // calculate the sum over the boolean hypercube
-        let claimed_sum = polynomial.sum_over_hypercube();
-
         // Init round polynomials struct
         let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
 
@@ -82,18 +81,18 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
         transcript.observe(polynomial.to_bytes());
 
         let mut poly = polynomial;
+        let degree = poly.max_degree();
 
         for _ in 0..poly.num_vars() {
-            let mut round_poly = Vec::with_capacity(poly.max_degree());
-            for point in 0..poly.max_degree() {
+            let mut round_poly = Vec::with_capacity(degree);
+            for point in 0..degree {
                 let value = poly
-                    .partial_evaluate(&[F::from_canonical_usize(point)])
+                    .partial_evaluate(&[Fields::Extension(E::from_canonical_usize(point))])
                     .sum_over_hypercube();
                 round_poly.push(value);
             }
             let challenge = transcript.sample_challenge();
-            // TODO: uncomment
-            poly = &poly.partial_evaluate(&[challenge]);
+            // poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
             round_polynomials.push(round_poly);
         }
 
@@ -111,72 +110,98 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
         // Appends the polynomial to the transcript
         transcript.observe(polynomial.to_bytes());
 
-        let mut claimed_sum = proof.claimed_sum;
+        let mut claimed_sum = E::from_base(proof.claimed_sum);
         let mut challenges = Vec::with_capacity(polynomial.num_vars());
 
         // Perform round by round verification
         for round_poly in &proof.round_polynomials {
-            assert_eq!(claimed_sum, round_poly[0] + round_poly[1]);
-            transcript.observe_base_element(&round_poly);
-            let challenge = transcript.sample_challenge();
-            claimed_sum = barycentric_evaluation(&round_poly, &challenge);
+            assert_eq!(
+                claimed_sum,
+                round_poly[0].to_extension_field() + round_poly[1].to_extension_field()
+            );
+            transcript.observe_ext_element(
+                &round_poly
+                    .into_iter()
+                    .map(|val| val.to_extension_field())
+                    .collect::<Vec<E>>(),
+            );
+            let challenge = Fields::<F, E>::Extension(transcript.sample_challenge());
+            claimed_sum = barycentric_evaluation(&round_poly, &challenge).to_extension_field();
             challenges.push(challenge);
         }
 
         // Oracle check
-        assert_eq!(claimed_sum, polynomial.evaluate(&challenges));
+        assert_eq!(
+            claimed_sum,
+            polynomial.evaluate(&challenges).to_extension_field()
+        );
 
         Ok(true)
     }
 }
 
 // Evaluate a univariate polynomial in evaluation form
-pub fn barycentric_evaluation<F: Field>(evaluations: &[F], evaluation_point: &F) -> F {
-    let m_x = (0..evaluations.len()).fold(F::one(), |mut acc, val| {
-        acc *= *evaluation_point - F::from_canonical_usize(val);
+pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
+    evaluations: &[Fields<F, E>],
+    evaluation_point: &Fields<F, E>,
+) -> Fields<F, E> {
+    let m_x = (0..evaluations.len()).fold(E::one(), |mut acc, val| {
+        acc *= evaluation_point.to_extension_field() - E::from_canonical_usize(val);
         acc
     });
 
-    let mut res = F::zero();
+    let mut res = E::zero();
 
     for i in 0..evaluations.len() {
-        let numerator = evaluations[i];
+        let numerator = evaluations[i].to_extension_field();
 
         let di = (0..evaluations.len())
             .into_iter()
             .filter(|val| *val != i)
-            .fold(F::one(), |mut acc, val| {
+            .fold(E::one(), |mut acc, val| {
                 acc *= F::from_canonical_usize(i) - F::from_canonical_usize(val);
                 acc
             });
 
-        let denominator = di * (*evaluation_point - F::from_canonical_usize(i));
+        let denominator = di * (evaluation_point.to_extension_field() - E::from_canonical_usize(i));
 
         res += numerator * denominator.inverse()
     }
 
-    m_x * res
+    Fields::Extension(m_x * res)
 }
 
 #[cfg(test)]
 mod tests {
+    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
     use p3_mersenne_31::Mersenne31;
+    use poly::Fields;
 
     use crate::barycentric_evaluation;
 
     #[test]
     fn test_barycentric_evaluation() {
         // Polynomial in question: 3x + 2
-        let poly: Vec<Mersenne31> = [2, 3].into_iter().map(|val| Mersenne31::new(val)).collect();
-        let res = barycentric_evaluation(&poly, &Mersenne31::new(5));
-        assert_eq!(res, Mersenne31::new(7));
+        let poly: Vec<Fields<Mersenne31, BinomialExtensionField<Mersenne31, 3>>> = [2, 3]
+            .into_iter()
+            .map(|val| Fields::Base(Mersenne31::new(val)))
+            .collect();
+        let res = barycentric_evaluation(&poly, &Fields::Base(Mersenne31::new(5)));
+        assert_eq!(
+            res,
+            Fields::Extension(AbstractExtensionField::from_base(Mersenne31::new(7)))
+        );
 
         // Polynomial in question: 5x^2 + 3x + 2
-        let poly: Vec<Mersenne31> = [2, 10, 28, 56, 94]
-            .into_iter()
-            .map(|val| Mersenne31::new(val))
-            .collect();
-        let res = barycentric_evaluation(&poly, &Mersenne31::new(5));
-        assert_eq!(res, Mersenne31::new(142));
+        let poly: Vec<Fields<Mersenne31, BinomialExtensionField<Mersenne31, 3>>> =
+            [2, 10, 28, 56, 94]
+                .into_iter()
+                .map(|val| Fields::Base(Mersenne31::new(val)))
+                .collect();
+        let res = barycentric_evaluation(&poly, &Fields::Base(Mersenne31::new(5)));
+        assert_eq!(
+            res,
+            Fields::Extension(AbstractExtensionField::from_base(Mersenne31::new(142)))
+        );
     }
 }
