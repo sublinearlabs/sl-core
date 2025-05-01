@@ -5,24 +5,24 @@ use std::{
     rc::Rc,
 };
 
-use crate::MultilinearExtension;
 use crate::mle::MultilinearPoly;
-use p3_field::Field;
+use crate::{Fields, MultilinearExtension};
+use p3_field::{ExtensionField, Field};
 
-pub type CombineFn<F> = Rc<dyn Fn(&[F]) -> F>;
+pub type CombineFn<F, E> = Rc<dyn Fn(&[Fields<F, E>]) -> Fields<F, E>>;
 
-pub struct VPoly<F: Field> {
+pub struct VPoly<F: Field, E: ExtensionField<F>> {
     /// The MLEs that make up the virtual polynomial.
-    mles: Vec<MultilinearPoly<F>>,
+    mles: Vec<MultilinearPoly<F, E>>,
     /// max possible degree of the polynomial (This is the max number of MLE multiplication operands)
     max_degree: usize,
     /// Number of variables in the polynomial
     num_vars: usize,
     /// Combination function for evaluating the virtual polynomial.
-    combine_fn: CombineFn<F>,
+    combine_fn: CombineFn<F, E>,
 }
 
-impl<F: Field + Debug> Debug for VPoly<F> {
+impl<F: Field + Debug, E: ExtensionField<F>> Debug for VPoly<F, E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("VPoly")
             .field("mles", &self.mles)
@@ -33,13 +33,13 @@ impl<F: Field + Debug> Debug for VPoly<F> {
     }
 }
 
-impl<F: Field> VPoly<F> {
+impl<F: Field, E: ExtensionField<F>> VPoly<F, E> {
     /// Creates a new virtual polynomial from a vector of MLEs and a combination function.
     pub fn new(
-        mles: Vec<MultilinearPoly<F>>,
+        mles: Vec<MultilinearPoly<F, E>>,
         max_degree: usize,
         num_vars: usize,
-        combine_fn: CombineFn<F>,
+        combine_fn: CombineFn<F, E>,
     ) -> Self {
         // assert all MLEs have the same number of variables
         assert!(
@@ -65,14 +65,14 @@ impl<F: Field> VPoly<F> {
     }
 
     /// MLEs in the polynomial
-    pub fn mles(&self) -> Vec<MultilinearPoly<F>> {
+    pub fn mles(&self) -> Vec<MultilinearPoly<F, E>> {
         self.mles.clone()
     }
 }
 
-impl<F: Field> MultilinearExtension<F> for VPoly<F> {
+impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> {
     /// Evaluates the virtual polynomial at a given point.
-    fn evaluate(&self, point: &[F]) -> F {
+    fn evaluate(&self, point: &[Fields<F, E>]) -> Fields<F, E> {
         let values = self
             .mles
             .iter()
@@ -82,7 +82,7 @@ impl<F: Field> MultilinearExtension<F> for VPoly<F> {
     }
 
     /// Partial evaluation of the virtual polynomial at a given point.
-    fn partial_evaluate(&self, point: &[F]) -> Self {
+    fn partial_evaluate(&self, point: &[Fields<F, E>]) -> Self {
         let values = self
             .mles
             .iter()
@@ -103,15 +103,19 @@ impl<F: Field> MultilinearExtension<F> for VPoly<F> {
     }
 
     /// Returns the sum of evaluations over the boolean hypercube
-    fn sum_over_hypercube(&self) -> F {
-        let mut sum = F::zero();
+    fn sum_over_hypercube(&self) -> Fields<F, E> {
+        let mut sum = E::zero();
         for i in 0..(1 << self.num_vars()) {
             // TODO: get rid of the vec allocation here, maybe make
             // combine fn take an iterator
-            let row = self.mles.iter().map(|p| p[i]).collect::<Vec<F>>();
-            sum += (self.combine_fn)(&row);
+            let row = self
+                .mles
+                .iter()
+                .map(|p| p[i])
+                .collect::<Vec<Fields<F, E>>>();
+            sum += (self.combine_fn)(&row).to_extension_field();
         }
-        sum
+        Fields::Extension(sum)
     }
 
     /// Number of variables in the polynomial
@@ -128,24 +132,31 @@ impl<F: Field> MultilinearExtension<F> for VPoly<F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_field::AbstractField;
+    use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_goldilocks::Goldilocks as F;
 
-    fn prod_combined_fn(values: &[F]) -> F {
-        values[0] * values[1]
+    type E = BinomialExtensionField<F, 2>;
+
+    fn prod_combined_fn(values: &[Fields<F, E>]) -> Fields<F, E> {
+        Fields::Extension(values[0].to_extension_field() * values[1].to_extension_field())
     }
 
-    fn combined_fn_1(values: &[F]) -> F {
-        (F::from_canonical_u64(2) * values[0] * values[1]) + values[2]
+    fn combined_fn_1(values: &[Fields<F, E>]) -> Fields<F, E> {
+        Fields::Extension(
+            values[0].to_extension_field()
+                * values[1].to_extension_field()
+                * F::from_canonical_u64(2)
+                + values[2].to_extension_field(),
+        )
     }
 
-    fn f_abc() -> MultilinearPoly<F> {
+    fn f_abc() -> MultilinearPoly<F, E> {
         // f(a,b,c) = 2ab + 3bc;
         MultilinearPoly::new_from_vec(
             3,
             vec![0, 0, 0, 3, 0, 0, 2, 5]
                 .into_iter()
-                .map(F::from_canonical_u64)
+                .map(|val| (Fields::Base(F::from_canonical_u64(val))))
                 .collect(),
         )
     }
@@ -157,12 +168,15 @@ mod tests {
             2,
             vec![0, 0, 3, 5]
                 .into_iter()
-                .map(F::from_canonical_u64)
+                .map(|val| Fields::Base(F::from_canonical_u64(val)))
                 .collect(),
         );
         let mles = vec![f_ab, f_abc()];
         let vpoly = VPoly::new(mles, 1, 3, Rc::new(prod_combined_fn));
-        let point = vec![F::from_canonical_u64(1), F::from_canonical_u64(2)];
+        let point = vec![
+            Fields::Base(F::from_canonical_u64(1)),
+            Fields::Base(F::from_canonical_u64(2)),
+        ];
         vpoly.partial_evaluate(&point);
     }
 
@@ -181,20 +195,20 @@ mod tests {
         let mles = vec![f_abc(), f_abc()];
         let vpoly = VPoly::new(mles, 1, 3, Rc::new(prod_combined_fn));
 
-        let point = vec![F::from_canonical_u64(4)];
+        let point = vec![Fields::Base(F::from_canonical_u64(4))];
         let expected_mles = vec![
             MultilinearPoly::new_from_vec(
                 2,
                 vec![0, 0, 8, 11]
                     .into_iter()
-                    .map(F::from_canonical_u64)
+                    .map(|val| Fields::Extension(E::from_canonical_u64(val)))
                     .collect(),
             ),
             MultilinearPoly::new_from_vec(
                 2,
                 vec![0, 0, 8, 11]
                     .into_iter()
-                    .map(F::from_canonical_u64)
+                    .map(|val| Fields::Extension(E::from_canonical_u64(val)))
                     .collect(),
             ),
         ];
@@ -206,11 +220,11 @@ mod tests {
         let mles = vec![f_abc(), f_abc()];
         let vpoly = VPoly::new(mles, 2, 3, Rc::new(prod_combined_fn)); // combination => (a * b)
         let points = vec![
-            F::from_canonical_u64(1),
-            F::from_canonical_u64(2),
-            F::from_canonical_u64(3),
+            Fields::Base(F::from_canonical_u64(1)),
+            Fields::Base(F::from_canonical_u64(2)),
+            Fields::Base(F::from_canonical_u64(3)),
         ];
-        let expected_mles = F::from_canonical_u64(22 * 22);
+        let expected_mles = Fields::Extension(E::from_canonical_u64(22 * 22));
         assert_eq!(vpoly.evaluate(&points), expected_mles);
     }
 
@@ -219,11 +233,11 @@ mod tests {
         let mles = vec![f_abc(), f_abc(), f_abc()];
         let vpoly = VPoly::new(mles, 2, 3, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
         let points = vec![
-            F::from_canonical_u64(1),
-            F::from_canonical_u64(2),
-            F::from_canonical_u64(3),
+            Fields::Base(F::from_canonical_u64(1)),
+            Fields::Base(F::from_canonical_u64(2)),
+            Fields::Base(F::from_canonical_u64(3)),
         ];
-        let expected_mles = F::from_canonical_u64(990);
+        let expected_mles = Fields::Extension(E::from_canonical_u64(990));
         assert_eq!(vpoly.evaluate(&points), expected_mles);
     }
 
@@ -231,6 +245,9 @@ mod tests {
     fn test_sum_over_boolean_hypercube() {
         let mles = vec![f_abc(), f_abc(), f_abc()];
         let vpoly = VPoly::new(mles, 2, 3, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
-        assert_eq!(vpoly.sum_over_hypercube(), F::from_canonical_u64(86));
+        assert_eq!(
+            vpoly.sum_over_hypercube(),
+            Fields::Extension(E::from_canonical_u64(86))
+        );
     }
 }
