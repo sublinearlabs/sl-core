@@ -44,13 +44,17 @@ pub struct SumCheck<
     F: Field,
     E: ExtensionField<F>,
     FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F, E>,
+    MLE: MultilinearExtension<F, E> + Clone,
 > {
     _marker: PhantomData<(F, E, FC, MLE)>,
 }
 
-impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExtension<F, E>>
-    SumCheck<F, E, FC, MLE>
+impl<
+    F: Field,
+    E: ExtensionField<F>,
+    FC: FieldChallenger<F>,
+    MLE: MultilinearExtension<F, E> + Clone,
+> SumCheck<F, E, FC, MLE>
 {
     pub fn new() -> Self {
         Self {
@@ -59,8 +63,12 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
     }
 }
 
-impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExtension<F, E>>
-    SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
+impl<
+    F: Field,
+    E: ExtensionField<F>,
+    FC: FieldChallenger<F>,
+    MLE: MultilinearExtension<F, E> + Clone,
+> SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
 {
     type Polynomial = MLE;
     type Transcript = Transcript<F, E, FC>;
@@ -80,19 +88,18 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>, MLE: MultilinearExt
         // Append polynomial to transcript
         transcript.observe(polynomial.to_bytes());
 
-        let mut poly = polynomial;
-        let degree = poly.max_degree();
+        let mut poly = polynomial.clone();
 
         for _ in 0..poly.num_vars() {
-            let mut round_poly = Vec::with_capacity(degree);
-            for point in 0..degree {
+            let mut round_poly = Vec::with_capacity(poly.max_degree());
+            for point in 0..poly.max_degree() {
                 let value = poly
                     .partial_evaluate(&[Fields::Extension(E::from_canonical_usize(point))])
                     .sum_over_hypercube();
                 round_poly.push(value);
             }
             let challenge = transcript.sample_challenge();
-            // poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
+            poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
             round_polynomials.push(round_poly);
         }
 
