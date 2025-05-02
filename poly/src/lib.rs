@@ -2,8 +2,8 @@ use p3_challenger::FieldChallenger;
 use p3_field::{ExtensionField, Field};
 
 pub mod mle;
-pub mod vpoly;
 pub mod utils;
+pub mod vpoly;
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum Fields<F: Field, E: ExtensionField<F>> {

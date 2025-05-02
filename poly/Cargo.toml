@@ -4,10 +4,17 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# Plonky3
 p3-challenger.workspace = true
 p3-field.workspace = true
+p3-mersenne-31.workspace = true
 p3-goldilocks = "0.2.0"
+
+# transcript
 transcript = { path = "../transcript" }
+
+
+
 
 
 [dev-dependencies]
