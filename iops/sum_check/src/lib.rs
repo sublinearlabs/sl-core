@@ -105,7 +105,6 @@ impl<
                     .collect::<Vec<E>>(),
             );
             let challenge = transcript.sample_challenge();
-            dbg!("Prover: ", i, challenge);
             poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
             round_polynomials.push(round_poly);
         }
@@ -127,7 +126,6 @@ impl<
         let mut claimed_sum = proof.claimed_sum.to_extension_field();
         let mut challenges = Vec::with_capacity(polynomial.num_vars());
 
-        let mut i = 0;
         // Perform round by round verification
         for round_poly in &proof.round_polynomials {
             assert_eq!(
@@ -141,8 +139,6 @@ impl<
                     .collect::<Vec<E>>(),
             );
             let challenge = Fields::Extension(transcript.sample_challenge());
-            dbg!("Verifier: ", i, challenge);
-            i += 1;
             claimed_sum = barycentric_evaluation(&round_poly, &challenge).to_extension_field();
             challenges.push(challenge);
         }

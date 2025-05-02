@@ -140,7 +140,7 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_field::{extension::BinomialExtensionField, AbstractField};
+    use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;
