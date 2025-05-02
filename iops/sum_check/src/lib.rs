@@ -50,11 +50,11 @@ pub struct SumCheck<
 }
 
 impl<
-        F: Field,
-        E: ExtensionField<F>,
-        FC: FieldChallenger<F>,
-        MLE: MultilinearExtension<F, E> + Clone,
-    > SumCheck<F, E, FC, MLE>
+    F: Field,
+    E: ExtensionField<F>,
+    FC: FieldChallenger<F>,
+    MLE: MultilinearExtension<F, E> + Clone,
+> SumCheck<F, E, FC, MLE>
 {
     pub fn new() -> Self {
         Self {
@@ -64,11 +64,11 @@ impl<
 }
 
 impl<
-        F: Field,
-        E: ExtensionField<F>,
-        FC: FieldChallenger<F>,
-        MLE: MultilinearExtension<F, E> + Clone,
-    > SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
+    F: Field,
+    E: ExtensionField<F>,
+    FC: FieldChallenger<F>,
+    MLE: MultilinearExtension<F, E> + Clone,
+> SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
 {
     type Polynomial = MLE;
     type Transcript = Transcript<F, E, FC>;
@@ -180,7 +180,7 @@ pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
 
 #[cfg(test)]
 mod tests {
-    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
+    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
     use p3_mersenne_31::Mersenne31;
     use poly::Fields;
 
