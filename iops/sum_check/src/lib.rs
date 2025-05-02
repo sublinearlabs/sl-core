@@ -86,7 +86,7 @@ impl<
         transcript.observe_base_element(&[claimed_sum]);
 
         // Append polynomial to transcript
-        transcript.observe(polynomial.to_bytes());
+        polynomial.commit_to_transcript(transcript);
 
         let mut poly = polynomial.clone();
 
@@ -115,7 +115,7 @@ impl<
         transcript.observe_base_element(&[proof.claimed_sum]);
 
         // Appends the polynomial to the transcript
-        transcript.observe(polynomial.to_bytes());
+        polynomial.commit_to_transcript(transcript);
 
         let mut claimed_sum = E::from_base(proof.claimed_sum);
         let mut challenges = Vec::with_capacity(polynomial.num_vars());

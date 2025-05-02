@@ -23,7 +23,7 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> Transcript<F, E, FC
     }
 
     // Absorbs a byte array to the transcript
-    pub fn observe(&self, message: &[u8]) {
+    pub fn observe(&self, _message: &[u8]) {
         todo!()
     }
 
