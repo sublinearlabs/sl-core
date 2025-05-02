@@ -1,5 +1,6 @@
 use std::ops::Index;
 
+use p3_challenger::FieldChallenger;
 use p3_field::{ExtensionField, Field};
 
 use crate::{Fields, MultilinearExtension};
@@ -91,9 +92,17 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for MultilinearP
         self.n_vars
     }
 
-    /// Converts the polynomial to bytes
-    fn to_bytes(&self) -> &[u8] {
-        todo!()
+    /// Commit `MultilinearPoly` to transcript
+    fn commit_to_transcript<FC: FieldChallenger<F>>(
+        &self,
+        transcript: &mut transcript::Transcript<F, E, FC>,
+    ) {
+        for eval in &self.evaluations {
+            match eval {
+                Fields::Base(base_elem) => transcript.observe_base_element(&[*base_elem]),
+                Fields::Extension(ext_elem) => transcript.observe_ext_element(&[*ext_elem]),
+            }
+        }
     }
 }
 

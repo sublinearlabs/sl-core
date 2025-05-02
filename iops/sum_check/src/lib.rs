@@ -86,7 +86,7 @@ impl<
         transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
         // Append polynomial to transcript
-        transcript.observe(polynomial.to_bytes());
+        polynomial.commit_to_transcript(transcript);
 
         let mut poly = polynomial.clone();
 
@@ -122,7 +122,7 @@ impl<
         transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
 
         // Appends the polynomial to the transcript
-        transcript.observe(polynomial.to_bytes());
+        polynomial.commit_to_transcript(transcript);
 
         let mut claimed_sum = proof.claimed_sum.to_extension_field();
         let mut challenges = Vec::with_capacity(polynomial.num_vars());
