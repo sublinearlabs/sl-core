@@ -61,7 +61,7 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> Transcript<F, E, FC
 #[cfg(test)]
 pub mod tests {
     use p3_challenger::{HashChallenger, SerializingChallenger32};
-    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField, AbstractField};
+    use p3_field::{AbstractExtensionField, AbstractField, extension::BinomialExtensionField};
     use p3_keccak::Keccak256Hash;
     use p3_mersenne_31::Mersenne31;
 
