@@ -50,11 +50,11 @@ pub struct SumCheck<
 }
 
 impl<
-    F: Field,
-    E: ExtensionField<F>,
-    FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F, E> + Clone,
-> SumCheck<F, E, FC, MLE>
+        F: Field,
+        E: ExtensionField<F>,
+        FC: FieldChallenger<F>,
+        MLE: MultilinearExtension<F, E> + Clone,
+    > SumCheck<F, E, FC, MLE>
 {
     pub fn new() -> Self {
         Self {
@@ -64,11 +64,11 @@ impl<
 }
 
 impl<
-    F: Field,
-    E: ExtensionField<F>,
-    FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F, E> + Clone,
-> SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
+        F: Field,
+        E: ExtensionField<F>,
+        FC: FieldChallenger<F>,
+        MLE: MultilinearExtension<F, E> + Clone,
+    > SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
 {
     type Polynomial = MLE;
     type Transcript = Transcript<F, E, FC>;
@@ -86,7 +86,7 @@ impl<
         transcript.observe_base_element(&[claimed_sum]);
 
         // Append polynomial to transcript
-        transcript.observe(polynomial.to_bytes());
+        polynomial.commit_to_transcript(transcript);
 
         let mut poly = polynomial.clone();
 
@@ -115,7 +115,7 @@ impl<
         transcript.observe_base_element(&[proof.claimed_sum]);
 
         // Appends the polynomial to the transcript
-        transcript.observe(polynomial.to_bytes());
+        polynomial.commit_to_transcript(transcript);
 
         let mut claimed_sum = E::from_base(proof.claimed_sum);
         let mut challenges = Vec::with_capacity(polynomial.num_vars());
@@ -180,7 +180,7 @@ pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
 
 #[cfg(test)]
 mod tests {
-    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
     use p3_mersenne_31::Mersenne31;
     use poly::Fields;
 
