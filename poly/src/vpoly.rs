@@ -128,18 +128,19 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> 
         &self,
         transcript: &mut transcript::Transcript<F, E, FC>,
     ) {
-        // TODO: this is not complete, we need store all information related to the vpoly
-        //  this includes n_vars, max_degree and combine function
+        // TODO: we need to add the combine function to the transcript
         for mle in &self.mles {
             mle.commit_to_transcript(transcript);
         }
+        transcript.observe_base_element(&[F::from_canonical_usize(self.max_degree)]);
+        transcript.observe_base_element(&[F::from_canonical_usize(self.num_vars)]);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_field::{AbstractField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;
