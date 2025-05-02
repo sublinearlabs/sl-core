@@ -1,3 +1,4 @@
+use p3_challenger::FieldChallenger;
 use p3_field::{ExtensionField, Field};
 
 pub mod mle;
@@ -44,6 +45,9 @@ pub trait MultilinearExtension<F: Field, E: ExtensionField<F>> {
     fn sum_over_hypercube(&self) -> Fields<F, E>;
     /// Returns the number of variables of the polynomial
     fn num_vars(&self) -> usize;
-    /// Converts the polynomial to bytes
-    fn to_bytes(&self) -> &[u8];
+    /// Commit structure to transcript
+    fn commit_to_transcript<FC: FieldChallenger<F>>(
+        &self,
+        transcript: &mut transcript::Transcript<F, E, FC>,
+    );
 }

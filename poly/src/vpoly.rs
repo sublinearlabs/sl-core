@@ -123,16 +123,23 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> 
         self.num_vars
     }
 
-    /// Converts the polynomial to bytes
-    fn to_bytes(&self) -> &[u8] {
-        todo!()
+    /// Commit vpoly to transcript
+    fn commit_to_transcript<FC: p3_challenger::FieldChallenger<F>>(
+        &self,
+        transcript: &mut transcript::Transcript<F, E, FC>,
+    ) {
+        // TODO: this is not complete, we need store all information related to the vpoly
+        //  this includes n_vars, max_degree and combine function
+        for mle in &self.mles {
+            mle.commit_to_transcript(transcript);
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_field::{AbstractField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;
