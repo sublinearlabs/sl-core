@@ -18,7 +18,6 @@ pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
         let numerator = evaluations[i].to_extension_field();
 
         let di = (0..evaluations.len())
-            .into_iter()
             .filter(|val| *val != i)
             .fold(E::one(), |mut acc, val| {
                 acc *= F::from_canonical_usize(i) - F::from_canonical_usize(val);

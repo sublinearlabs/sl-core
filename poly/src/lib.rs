@@ -27,10 +27,7 @@ impl<F: Field, E: ExtensionField<F>> Fields<F, E> {
     }
 
     pub fn is_base_field(&self) -> bool {
-        match self {
-            Fields::Base(_) => true,
-            _ => false,
-        }
+        matches!(self, Fields::Base(_))
     }
 }
 

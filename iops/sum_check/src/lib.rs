@@ -68,6 +68,18 @@ impl<
     E: ExtensionField<F>,
     FC: FieldChallenger<F>,
     MLE: MultilinearExtension<F, E> + Clone,
+> Default for SumCheck<F, E, FC, MLE>
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<
+    F: Field,
+    E: ExtensionField<F>,
+    FC: FieldChallenger<F>,
+    MLE: MultilinearExtension<F, E> + Clone,
 > SumCheckInterface<F, E> for SumCheck<F, E, FC, MLE>
 {
     type Polynomial = MLE;
@@ -134,12 +146,12 @@ impl<
             );
             transcript.observe_ext_element(
                 &round_poly
-                    .into_iter()
+                    .iter()
                     .map(|val| val.to_extension_field())
                     .collect::<Vec<E>>(),
             );
             let challenge = Fields::Extension(transcript.sample_challenge());
-            claimed_sum = barycentric_evaluation(&round_poly, &challenge).to_extension_field();
+            claimed_sum = barycentric_evaluation(round_poly, &challenge).to_extension_field();
             challenges.push(challenge);
         }
 
