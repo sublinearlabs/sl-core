@@ -7,12 +7,12 @@ use std::marker::PhantomData;
 use transcript::Transcript;
 
 pub struct SumCheckProof<F: Field, E: ExtensionField<F>> {
-    pub claimed_sum: F,
+    pub claimed_sum: Fields<F, E>,
     pub round_polynomials: Vec<Vec<Fields<F, E>>>,
 }
 
 impl<F: Field, E: ExtensionField<F>> SumCheckProof<F, E> {
-    pub fn new(claimed_sum: F, round_polynomials: Vec<Vec<Fields<F, E>>>) -> Self {
+    pub fn new(claimed_sum: Fields<F, E>, round_polynomials: Vec<Vec<Fields<F, E>>>) -> Self {
         Self {
             claimed_sum,
             round_polynomials,
@@ -20,14 +20,14 @@ impl<F: Field, E: ExtensionField<F>> SumCheckProof<F, E> {
     }
 }
 
-pub trait SumCheckInterface<F: Field> {
+pub trait SumCheckInterface<F: Field, E: ExtensionField<F>> {
     type Polynomial;
     type Transcript;
     type Proof;
 
     /// Generate proof for a polynomial sum over the bolean hypercube
     fn prove(
-        claimed_sum: F,
+        claimed_sum: Fields<F, E>,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error>;
@@ -68,14 +68,14 @@ impl<
     E: ExtensionField<F>,
     FC: FieldChallenger<F>,
     MLE: MultilinearExtension<F, E> + Clone,
-> SumCheckInterface<F> for SumCheck<F, E, FC, MLE>
+> SumCheckInterface<F, E> for SumCheck<F, E, FC, MLE>
 {
     type Polynomial = MLE;
     type Transcript = Transcript<F, E, FC>;
     type Proof = SumCheckProof<F, E>;
 
     fn prove(
-        claimed_sum: F,
+        claimed_sum: Fields<F, E>,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error> {
@@ -83,22 +83,29 @@ impl<
         let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
 
         // Append claimed sum to transcript
-        transcript.observe_base_element(&[claimed_sum]);
+        transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
         // Append polynomial to transcript
         transcript.observe(polynomial.to_bytes());
 
         let mut poly = polynomial.clone();
 
-        for _ in 0..poly.num_vars() {
+        for i in 0..poly.num_vars() {
             let mut round_poly = Vec::with_capacity(poly.max_degree());
-            for point in 0..poly.max_degree() {
+            for point in 0..=poly.max_degree() {
                 let value = poly
                     .partial_evaluate(&[Fields::Extension(E::from_canonical_usize(point))])
                     .sum_over_hypercube();
                 round_poly.push(value);
             }
+            transcript.observe_ext_element(
+                &round_poly
+                    .iter()
+                    .map(|val| val.to_extension_field())
+                    .collect::<Vec<E>>(),
+            );
             let challenge = transcript.sample_challenge();
+            dbg!("Prover: ", i, challenge);
             poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
             round_polynomials.push(round_poly);
         }
@@ -112,14 +119,15 @@ impl<
         transcript: &mut Self::Transcript,
     ) -> Result<bool, anyhow::Error> {
         // Appends the claimed sum to the transcript
-        transcript.observe_base_element(&[proof.claimed_sum]);
+        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
 
         // Appends the polynomial to the transcript
         transcript.observe(polynomial.to_bytes());
 
-        let mut claimed_sum = E::from_base(proof.claimed_sum);
+        let mut claimed_sum = proof.claimed_sum.to_extension_field();
         let mut challenges = Vec::with_capacity(polynomial.num_vars());
 
+        let mut i = 0;
         // Perform round by round verification
         for round_poly in &proof.round_polynomials {
             assert_eq!(
@@ -132,7 +140,9 @@ impl<
                     .map(|val| val.to_extension_field())
                     .collect::<Vec<E>>(),
             );
-            let challenge = Fields::<F, E>::Extension(transcript.sample_challenge());
+            let challenge = Fields::Extension(transcript.sample_challenge());
+            dbg!("Verifier: ", i, challenge);
+            i += 1;
             claimed_sum = barycentric_evaluation(&round_poly, &challenge).to_extension_field();
             challenges.push(challenge);
         }
@@ -180,11 +190,30 @@ pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
 
 #[cfg(test)]
 mod tests {
+    use p3_challenger::{HashChallenger, SerializingChallenger32};
     use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
+    use p3_keccak::Keccak256Hash;
     use p3_mersenne_31::Mersenne31;
-    use poly::Fields;
+    use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
+    use transcript::Transcript;
 
-    use crate::barycentric_evaluation;
+    use crate::{SumCheck, SumCheckInterface, SumCheckProof, barycentric_evaluation};
+
+    type F = Mersenne31;
+
+    type E = BinomialExtensionField<Mersenne31, 3>;
+
+    type FC = SerializingChallenger32<Mersenne31, HashChallenger<u8, Keccak256Hash, 32>>;
+
+    fn f_abc() -> MultilinearPoly<F, E> {
+        MultilinearPoly::new_from_vec(
+            3,
+            vec![0, 0, 0, 3, 0, 0, 2, 5]
+                .into_iter()
+                .map(|val| Fields::Base(F::new(val)))
+                .collect(),
+        )
+    }
 
     #[test]
     fn test_barycentric_evaluation() {
@@ -210,5 +239,25 @@ mod tests {
             res,
             Fields::Extension(AbstractExtensionField::from_base(Mersenne31::new(142)))
         );
+    }
+
+    #[test]
+    fn test_sumcheck() {
+        let polynomial = f_abc();
+
+        let claimed_sum = polynomial.sum_over_hypercube();
+
+        let challenger = FC::new(HashChallenger::new(vec![], Keccak256Hash));
+
+        let mut prover_transcript = Transcript::init_with_challenger(challenger.clone());
+
+        let proof: SumCheckProof<Mersenne31, BinomialExtensionField<Mersenne31, 3>> =
+            SumCheck::prove(claimed_sum, &polynomial, &mut prover_transcript).unwrap();
+
+        let mut verify_transcript = Transcript::init_with_challenger(challenger);
+
+        let verify = SumCheck::verify(&polynomial, &proof, &mut verify_transcript);
+
+        assert!(verify.unwrap());
     }
 }
