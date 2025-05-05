@@ -1,20 +1,21 @@
 use std::ops::Index;
 
-use p3_field::Field;
+use p3_challenger::FieldChallenger;
+use p3_field::{ExtensionField, Field};
 
-use crate::MultilinearExtension;
+use crate::{Fields, MultilinearExtension};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct MultilinearPoly<F: Field> {
+pub struct MultilinearPoly<F: Field, E: ExtensionField<F>> {
     /// The evaluations of the boolean hypercube {0,1}^n_vars
-    evaluations: Vec<F>,
+    evaluations: Vec<Fields<F, E>>,
     /// Number of variables
     n_vars: usize,
 }
 
-impl<F: Field> MultilinearPoly<F> {
+impl<F: Field, E: ExtensionField<F>> MultilinearPoly<F, E> {
     /// Instantiates a `MultilinearPoly` from a vec of field elements
-    pub fn new_from_vec(n_vars: usize, evaluations: Vec<F>) -> Self {
+    pub fn new_from_vec(n_vars: usize, evaluations: Vec<Fields<F, E>>) -> Self {
         // assert that the number of variables matches the number of evaluations
         assert_eq!(1 << n_vars, evaluations.len());
         Self {
@@ -22,18 +23,13 @@ impl<F: Field> MultilinearPoly<F> {
             n_vars,
         }
     }
-
-    /// Number of variables in the `MultilinearPoly`
-    pub fn num_vars(&self) -> usize {
-        self.n_vars
-    }
 }
 
-impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
+impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for MultilinearPoly<F, E> {
     /// Partially fixes variables in the `MultilinearPoly`
     /// Returns a new `MultilinearPoly` after fixed variables have
     /// been removed
-    fn partial_evaluate(&self, points: &[F]) -> Self {
+    fn partial_evaluate(&self, points: &[Fields<F, E>]) -> Self {
         // ensure we don't have more points than variables
         assert!(points.len() <= self.n_vars);
 
@@ -43,19 +39,19 @@ impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
         let mut mid_point = new_evaluations.len() / 2;
         for point in points {
             for i in 0..mid_point {
-                let left = new_evaluations[i];
-                let right = new_evaluations[i + mid_point];
+                let left = new_evaluations[i].to_extension_field();
+                let right = new_evaluations[i + mid_point].to_extension_field();
                 new_evaluations[i] = match point {
                     // if the evaluation point is in the boolean hypercube
                     // return result from table directly
-                    a if a.is_zero() => left,
-                    a if a.is_one() => right,
+                    a if a.to_extension_field().is_zero() => Fields::Extension(left),
+                    a if a.to_extension_field().is_one() => Fields::Extension(right),
 
                     // linear interpolation
                     // (1-r) * left + r * right
                     // left - r.left + r.right
                     // left - r (left - right)
-                    _ => left - *point * (left - right),
+                    _ => Fields::Extension(left - point.to_extension_field() * (left - right)),
                 }
             }
             mid_point /= 2;
@@ -71,7 +67,7 @@ impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
 
     /// Fixes all variables in the `MultilinearPoly` return a single
     /// field element
-    fn evaluate(&self, points: &[F]) -> F {
+    fn evaluate(&self, points: &[Fields<F, E>]) -> Fields<F, E> {
         // ensure number of points exactly matches number of variables
         assert_eq!(self.n_vars, points.len());
         self.partial_evaluate(points).evaluations[0]
@@ -83,15 +79,35 @@ impl<F: Field> MultilinearExtension<F> for MultilinearPoly<F> {
     }
 
     /// Returns the sum of evaluations overr the boolean hypercube
-    fn sum_over_hypercube(&self) -> F {
+    fn sum_over_hypercube(&self) -> Fields<F, E> {
         self.evaluations
             .iter()
-            .fold(F::zero(), |acc, curr| acc + *curr)
+            .fold(Fields::Base(F::zero()), |acc, curr| {
+                Fields::Extension(acc.to_extension_field() + curr.to_extension_field())
+            })
+    }
+
+    /// Number of variables in the `MultilinearPoly`
+    fn num_vars(&self) -> usize {
+        self.n_vars
+    }
+
+    /// Commit `MultilinearPoly` to transcript
+    fn commit_to_transcript<FC: FieldChallenger<F>>(
+        &self,
+        transcript: &mut transcript::Transcript<F, E, FC>,
+    ) {
+        for eval in &self.evaluations {
+            match eval {
+                Fields::Base(base_elem) => transcript.observe_base_element(&[*base_elem]),
+                Fields::Extension(ext_elem) => transcript.observe_ext_element(&[*ext_elem]),
+            }
+        }
     }
 }
 
-impl<F: Field> Index<usize> for MultilinearPoly<F> {
-    type Output = F;
+impl<F: Field, E: ExtensionField<F>> Index<usize> for MultilinearPoly<F, E> {
+    type Output = Fields<F, E>;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.evaluations[index]
@@ -101,16 +117,18 @@ impl<F: Field> Index<usize> for MultilinearPoly<F> {
 #[cfg(test)]
 mod tests {
     use super::MultilinearPoly;
-    use crate::MultilinearExtension;
-    use p3_field::AbstractField;
+    use crate::{MultilinearExtension, mle::Fields};
+    use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_goldilocks::Goldilocks as F;
 
-    fn f_abc() -> MultilinearPoly<F> {
+    type E = BinomialExtensionField<F, 2>;
+
+    fn f_abc() -> MultilinearPoly<F, E> {
         MultilinearPoly::new_from_vec(
             3,
             vec![0, 0, 0, 3, 0, 0, 2, 5]
                 .into_iter()
-                .map(F::from_canonical_u64)
+                .map(|val| Fields::Base(F::from_canonical_u64(val)))
                 .collect(),
         )
     }
@@ -127,7 +145,7 @@ mod tests {
             3,
             vec![0, 0, 0, 3, 0, 0, 2]
                 .into_iter()
-                .map(F::from_canonical_u64)
+                .map(|val| Fields::<F, E>::Base(F::from_canonical_u64(val)))
                 .collect(),
         );
     }
@@ -135,11 +153,17 @@ mod tests {
     #[test]
     fn test_partial_evaluation() {
         let poly = f_abc();
-        let f_a = poly.partial_evaluate(&[F::from_canonical_u64(2), F::from_canonical_u64(3)]);
+        let f_a = poly.partial_evaluate(&[
+            Fields::Base(F::from_canonical_u64(2)),
+            Fields::Base(F::from_canonical_u64(3)),
+        ]);
         assert_eq!(f_a.evaluations.len(), 2);
         assert_eq!(
             f_a.evaluations,
-            &[F::from_canonical_u64(12), F::from_canonical_u64(21)]
+            &[
+                Fields::Extension(E::from_canonical_u64(12)),
+                Fields::Extension(E::from_canonical_u64(21))
+            ]
         );
     }
 
@@ -147,16 +171,19 @@ mod tests {
     fn test_full_evaluation() {
         let poly = f_abc();
         let evaluation = poly.evaluate(&[
-            F::from_canonical_u64(2),
-            F::from_canonical_u64(3),
-            F::from_canonical_u64(4),
+            Fields::Base(F::from_canonical_u64(2)),
+            Fields::Base(F::from_canonical_u64(3)),
+            Fields::Base(F::from_canonical_u64(4)),
         ]);
-        assert_eq!(evaluation, F::from_canonical_u64(48));
+        assert_eq!(evaluation, Fields::Extension(E::from_canonical_u64(48)));
     }
 
     #[test]
     fn test_sum_over_boolean_hypercube() {
         let poly = f_abc();
-        assert_eq!(poly.sum_over_hypercube(), F::from_canonical_u64(10));
+        assert_eq!(
+            poly.sum_over_hypercube(),
+            Fields::Extension(E::from_canonical_u64(10))
+        );
     }
 }

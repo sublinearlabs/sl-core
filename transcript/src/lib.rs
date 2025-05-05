@@ -9,12 +9,22 @@ pub struct Transcript<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> {
 }
 
 impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> Transcript<F, E, FC> {
-    // Instantiate a transcript
-    pub fn init(challenger: FC) -> Self {
+    // Instantiate transcript
+    pub fn init() -> Self {
+        todo!()
+    }
+
+    // Instantiate a transcript with a challenger
+    pub fn init_with_challenger(challenger: FC) -> Self {
         Self {
             _marker: PhantomData,
             challenger,
         }
+    }
+
+    // Absorbs a byte array to the transcript
+    pub fn observe(&self, _message: &[u8]) {
+        todo!()
     }
 
     // Absorbs an element from the base field to the transcript
@@ -61,7 +71,7 @@ pub mod tests {
     fn test_transcript_initialization() {
         let challenger = SerializingChallenger32::new(HashChallenger::new(vec![], Keccak256Hash));
 
-        let mut transcript = Transcript::init(challenger);
+        let mut transcript = Transcript::init_with_challenger(challenger);
 
         let base_field_element = Mersenne31::from_canonical_u32(51);
 

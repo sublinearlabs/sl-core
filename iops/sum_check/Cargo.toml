@@ -1,0 +1,13 @@
+[package]
+name = "sum_check"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+p3-field.workspace = true
+anyhow.workspace = true
+transcript.workspace = true
+p3-challenger.workspace = true
+p3-mersenne-31.workspace = true
+p3-keccak.workspace = true
+poly.workspace = true
