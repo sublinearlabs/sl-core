@@ -1,0 +1,12 @@
+[package]
+name = "circuits"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+p3-field.workspace = true
+p3-goldilocks = "0.2.0"
+
+
+rand.workspace = true
+poly.workspace = true

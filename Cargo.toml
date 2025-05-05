@@ -1,8 +1,9 @@
 [workspace]
 members = [
   "transcript",
-  "poly"
-, "iops/sum_check"]
+  "poly",
+  "iops/sum_check",
+  "circuits"]
 
 resolver = "2"
 
@@ -19,3 +20,4 @@ poly = { path = "./poly" }
 
 # MISC
 anyhow = "1.0.98"
+rand = "0.8.5"

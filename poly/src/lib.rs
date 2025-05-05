@@ -1,3 +1,5 @@
+use std::ops::{Add, Mul};
+
 use p3_challenger::FieldChallenger;
 use p3_field::{ExtensionField, Field};
 
@@ -28,6 +30,40 @@ impl<F: Field, E: ExtensionField<F>> Fields<F, E> {
 
     pub fn is_base_field(&self) -> bool {
         matches!(self, Fields::Base(_))
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Add for Fields<F, E> {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        match self {
+            Fields::Base(lhs) => match rhs {
+                Fields::Base(rhs_inner) => Fields::Base(lhs + rhs_inner),
+                Fields::Extension(_) => panic!("mis-matched type"),
+            },
+            Fields::Extension(lhs) => match rhs {
+                Fields::Base(_) => panic!("mis-matched type"),
+                Fields::Extension(rhs_inner) => Fields::Extension(lhs + rhs_inner),
+            },
+        }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Mul for Fields<F, E> {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match self {
+            Fields::Base(lhs) => match rhs {
+                Fields::Base(rhs_inner) => Fields::Base(lhs * rhs_inner),
+                Fields::Extension(_) => panic!("mis-matched type"),
+            },
+            Fields::Extension(lhs) => match rhs {
+                Fields::Base(_) => panic!("mis-matched type"),
+                Fields::Extension(rhs_inner) => Fields::Extension(lhs * rhs_inner),
+            },
+        }
     }
 }
 
