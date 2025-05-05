@@ -84,6 +84,9 @@ dependencies = [
 name = "circuits"
 version = "0.1.0"
 dependencies = [
+ "p3-field",
+ "p3-goldilocks",
+ "poly",
  "rand",
 ]
 
