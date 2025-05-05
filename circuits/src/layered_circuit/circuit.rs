@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn test_circuit_exec_base() {
         let circuit = create_test_circuit();
-        let input = generate_input(&vec![1, 2, 3, 2, 1, 2, 4, 1], false);
+        let input = generate_input(&[1, 2, 3, 2, 1, 2, 4, 1], false);
         let trace = circuit.excecute(&input);
         let out = &trace.layers[trace.layers.len() - 1];
 
@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn test_circuit_exec_ext() {
         let circuit = create_test_circuit();
-        let input = generate_input(&vec![1, 2, 3, 2, 1, 2, 4, 1], true);
+        let input = generate_input(&[1, 2, 3, 2, 1, 2, 4, 1], true);
         let trace = circuit.excecute(&input);
         let out = &trace.layers[trace.layers.len() - 1];
 
