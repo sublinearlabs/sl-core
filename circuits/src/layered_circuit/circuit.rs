@@ -38,7 +38,7 @@ where
 mod tests {
     use super::*;
     use crate::layered_circuit::primitives::{Gate, Layer};
-    use p3_field::{AbstractField, ExtensionField, Field, extension::BinomialExtensionField};
+    use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_goldilocks::Goldilocks as F;
     use poly::Fields;
     type E = BinomialExtensionField<F, 2>;
