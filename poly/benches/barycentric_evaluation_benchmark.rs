@@ -34,7 +34,7 @@ fn barycentric_evaluation_benchmark(c: &mut Criterion) {
 
             black_box(barycentric_evaluation::<F, E>(
                 &poly_evaluation,
-                &Fields::Base(F::new(10)),
+                &Fields::Base(F::new(100)),
             ))
         })
     });
