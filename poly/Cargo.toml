@@ -13,10 +13,6 @@ p3-goldilocks = "0.2.0"
 # transcript
 transcript = { path = "../transcript" }
 
-
-
-
-
 [dev-dependencies]
 criterion = "0.5.1"
 multilinear_extensions = { git = "https://github.com/scroll-tech/ceno" }
@@ -24,11 +20,10 @@ ff_ext = { git = "https://github.com/scroll-tech/ceno" }
 p3 = { git = "https://github.com/scroll-tech/ceno"}
 rand.workspace = true
 
-
 [[bench]]
-name = "barycentric_evaluation_benchmark"
+name = "dense_multilinear"
 harness = false
 
 [[bench]]
-name = "dense_multilinear"
+name = "barycentric_evaluation_benchmark"
 harness = false
