@@ -8,7 +8,7 @@ use crate::{Fields, MultilinearExtension};
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultilinearPoly<F: Field, E: ExtensionField<F>> {
     /// The evaluations of the boolean hypercube {0,1}^n_vars
-    evaluations: Vec<Fields<F, E>>,
+    pub evaluations: Vec<Fields<F, E>>,
     /// Number of variables
     n_vars: usize,
 }
@@ -22,6 +22,11 @@ impl<F: Field, E: ExtensionField<F>> MultilinearPoly<F, E> {
             evaluations,
             n_vars,
         }
+    }
+
+    /// Creates a Zero Multilinear poly
+    pub fn zero(num_vars: usize) -> Self {
+        Self::new_from_vec(num_vars, vec![Fields::Base(F::zero()); 1 << num_vars])
     }
 }
 

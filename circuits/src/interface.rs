@@ -13,7 +13,19 @@ where
 }
 
 /// An extension of the circuit with implemention to get layer circuit props
-pub trait LayeredCircuitTr<F>: CircuitTr<F>
+pub trait GKRLayeredCircuitTr<F, E>: CircuitTr<F>
+where
+    F: Copy + std::ops::Add<Output = F> + std::ops::Mul<Output = F>,
+{
+    /// This is the type for the Add and Mul MLE (e.g. (MLE, MLE), (VPoly, VPoly))
+    type AddAndMulMLE;
+
+    /// This function returns the add and mul mle for the specified layer
+    fn add_and_mul_mle(&self, layer_index: usize) -> Self::AddAndMulMLE;
+}
+
+/// An extension of the circuit with implemention to get layer circuit props
+pub trait LibraGKRLayeredCircuitTr<F, E>: CircuitTr<F>
 where
     F: Copy + std::ops::Add<Output = F> + std::ops::Mul<Output = F>,
 {
