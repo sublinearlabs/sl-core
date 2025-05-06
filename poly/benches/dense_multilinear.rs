@@ -1,15 +1,12 @@
-use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 use ff_ext::{ExtensionField as CenoExtensionField, FromUniformBytes, GoldilocksExt2};
 use multilinear_extensions::mle::{
     DenseMultilinearExtension, MultilinearExtension as CenoMultilinearExtension,
 };
-use p3::{
-    field::{ExtensionField, integers::QuotientMap},
-    goldilocks::Goldilocks as CenoGoldilocks,
-};
-use p3_field::{AbstractField, PrimeField, extension::BinomialExtensionField};
+use p3::goldilocks::Goldilocks as CenoGoldilocks;
+use p3_field::{extension::BinomialExtensionField, AbstractField};
 use p3_goldilocks::Goldilocks;
-use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
+use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
 use rand::thread_rng;
 
 type F = Goldilocks;
