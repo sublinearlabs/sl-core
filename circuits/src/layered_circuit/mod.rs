@@ -1,7 +1,9 @@
 //! An implemenation for a the Layered arithementic circuit, built targetting GKR, Libra protocol
 //! This is not an IR for Virgo at this moment.
 pub mod circuit;
+pub mod grk;
 pub mod primitives;
+pub mod utils;
 
 use primitives::{Gate, GateOp, Layer};
 use rand;

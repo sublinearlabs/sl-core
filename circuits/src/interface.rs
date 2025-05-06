@@ -13,7 +13,7 @@ where
 }
 
 /// An extension of the circuit with implemention to get layer circuit props
-pub trait LayeredCircuitTr<F>: CircuitTr<F>
+pub trait GKRLayeredCircuitTr<F, E>: CircuitTr<F>
 where
     F: Copy + std::ops::Add<Output = F> + std::ops::Mul<Output = F>,
 {
