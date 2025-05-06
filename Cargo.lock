@@ -84,8 +84,8 @@ dependencies = [
 name = "circuits"
 version = "0.1.0"
 dependencies = [
- "p3-field",
- "p3-goldilocks",
+ "p3-field 0.2.0",
+ "p3-goldilocks 0.2.0",
  "poly",
  "rand",
 ]
@@ -189,6 +189,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
+name = "ff_ext"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/ceno#b4862d81ae66e54aeb66a7acda0a88b58782be50"
+dependencies = [
+ "once_cell",
+ "p3",
+ "rand_core",
+ "serde",
+]
+
+[[package]]
+name = "forward_ref"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8cbd1169bd7b4a0a20d92b9af7a7e0422888bd38a6f5ec29c1fd8c1558a272e"
+
+[[package]]
 name = "gcd"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -260,6 +277,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -292,6 +318,20 @@ name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+
+[[package]]
+name = "multilinear_extensions"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/ceno#b4862d81ae66e54aeb66a7acda0a88b58782be50"
+dependencies = [
+ "ff_ext",
+ "itertools 0.13.0",
+ "p3",
+ "rand",
+ "rayon",
+ "serde",
+ "tracing",
+]
 
 [[package]]
 name = "num-bigint"
@@ -347,15 +387,90 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
+name = "p3"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/ceno#b4862d81ae66e54aeb66a7acda0a88b58782be50"
+dependencies = [
+ "p3-baby-bear",
+ "p3-challenger 0.1.0",
+ "p3-commit",
+ "p3-dft 0.1.0",
+ "p3-field 0.1.0",
+ "p3-fri",
+ "p3-goldilocks 0.1.0",
+ "p3-matrix 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-mds 0.1.0",
+ "p3-merkle-tree",
+ "p3-poseidon",
+ "p3-poseidon2 0.1.0",
+ "p3-symmetric 0.1.0",
+ "p3-util 0.1.0",
+]
+
+[[package]]
+name = "p3-baby-bear"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "p3-field 0.1.0",
+ "p3-mds 0.1.0",
+ "p3-monty-31",
+ "p3-poseidon2 0.1.0",
+ "p3-symmetric 0.1.0",
+ "rand",
+ "serde",
+]
+
+[[package]]
+name = "p3-challenger"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "p3-field 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-symmetric 0.1.0",
+ "p3-util 0.1.0",
+ "tracing",
+]
+
+[[package]]
 name = "p3-challenger"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34060cfb3a04c6ca61f6f5332e0f63e0727c339d4d6b11f70f8b080ce3e3e95d"
 dependencies = [
- "p3-field",
- "p3-maybe-rayon",
- "p3-symmetric",
- "p3-util",
+ "p3-field 0.2.0",
+ "p3-maybe-rayon 0.2.0",
+ "p3-symmetric 0.2.0",
+ "p3-util 0.2.0",
+ "tracing",
+]
+
+[[package]]
+name = "p3-commit"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "p3-challenger 0.1.0",
+ "p3-dft 0.1.0",
+ "p3-field 0.1.0",
+ "p3-matrix 0.1.0",
+ "p3-util 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "p3-dft"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "p3-field 0.1.0",
+ "p3-matrix 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-util 0.1.0",
  "tracing",
 ]
 
@@ -366,10 +481,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51595e5196c92e17418c1757c8ec2f33b485a562fbd43231a99dc8824a6e3857"
 dependencies = [
  "itertools 0.13.0",
- "p3-field",
- "p3-matrix",
- "p3-maybe-rayon",
- "p3-util",
+ "p3-field 0.2.0",
+ "p3-matrix 0.2.0",
+ "p3-maybe-rayon 0.2.0",
+ "p3-util 0.2.0",
+ "tracing",
+]
+
+[[package]]
+name = "p3-field"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "forward_ref",
+ "itertools 0.14.0",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "nums",
+ "p3-maybe-rayon 0.1.0",
+ "p3-util 0.1.0",
+ "paste",
+ "rand",
+ "serde",
  "tracing",
 ]
 
@@ -384,7 +518,44 @@ dependencies = [
  "num-integer",
  "num-traits",
  "nums",
- "p3-util",
+ "p3-util 0.2.0",
+ "rand",
+ "serde",
+]
+
+[[package]]
+name = "p3-fri"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "p3-challenger 0.1.0",
+ "p3-commit",
+ "p3-dft 0.1.0",
+ "p3-field 0.1.0",
+ "p3-interpolation",
+ "p3-matrix 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-util 0.1.0",
+ "rand",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "p3-goldilocks"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "num-bigint",
+ "p3-dft 0.1.0",
+ "p3-field 0.1.0",
+ "p3-mds 0.1.0",
+ "p3-poseidon",
+ "p3-poseidon2 0.1.0",
+ "p3-symmetric 0.1.0",
+ "p3-util 0.1.0",
+ "paste",
  "rand",
  "serde",
 ]
@@ -396,14 +567,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0bc5f4c1d47e22eb0cd6719389d5b02ba5b11305342f755d3ba7094deddb139"
 dependencies = [
  "num-bigint",
- "p3-dft",
- "p3-field",
- "p3-mds",
- "p3-poseidon2",
- "p3-symmetric",
- "p3-util",
+ "p3-dft 0.2.0",
+ "p3-field 0.2.0",
+ "p3-mds 0.2.0",
+ "p3-poseidon2 0.2.0",
+ "p3-symmetric 0.2.0",
+ "p3-util 0.2.0",
  "rand",
  "serde",
+]
+
+[[package]]
+name = "p3-interpolation"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "p3-field 0.1.0",
+ "p3-matrix 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-util 0.1.0",
 ]
 
 [[package]]
@@ -412,8 +594,23 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6aea637c61ff647f229211551b80d5b17045b6f6f4ffb931698c0f61e3986505"
 dependencies = [
- "p3-symmetric",
+ "p3-symmetric 0.2.0",
  "tiny-keccak",
+]
+
+[[package]]
+name = "p3-matrix"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "p3-field 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-util 0.1.0",
+ "rand",
+ "serde",
+ "tracing",
+ "transpose",
 ]
 
 [[package]]
@@ -423,13 +620,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61af10867534e6516c71c918221781cb84165b852bff4568590c32f4b47edc86"
 dependencies = [
  "itertools 0.13.0",
- "p3-field",
- "p3-maybe-rayon",
- "p3-util",
+ "p3-field 0.2.0",
+ "p3-maybe-rayon 0.2.0",
+ "p3-util 0.2.0",
  "rand",
  "serde",
  "tracing",
  "transpose",
+]
+
+[[package]]
+name = "p3-maybe-rayon"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "rayon",
 ]
 
 [[package]]
@@ -440,17 +645,48 @@ checksum = "3925562a4c03183eafc92fd07b19f65ac6cb4b48d68c3920ce58d9bee6efe362"
 
 [[package]]
 name = "p3-mds"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "p3-dft 0.1.0",
+ "p3-field 0.1.0",
+ "p3-matrix 0.1.0",
+ "p3-symmetric 0.1.0",
+ "p3-util 0.1.0",
+ "rand",
+]
+
+[[package]]
+name = "p3-mds"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75671b0c103f3be427823eacdb78e8a259aed03928cb349003ed0ace0736cf35"
 dependencies = [
  "itertools 0.12.1",
- "p3-dft",
- "p3-field",
- "p3-matrix",
- "p3-symmetric",
- "p3-util",
+ "p3-dft 0.2.0",
+ "p3-field 0.2.0",
+ "p3-matrix 0.2.0",
+ "p3-symmetric 0.2.0",
+ "p3-util 0.2.0",
  "rand",
+]
+
+[[package]]
+name = "p3-merkle-tree"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "p3-commit",
+ "p3-field 0.1.0",
+ "p3-matrix 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-symmetric 0.1.0",
+ "p3-util 0.1.0",
+ "rand",
+ "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -461,16 +697,61 @@ checksum = "3ea1cb85cadd6a14bea84100c70a904fc995c626f9a9d458184714093365d4ab"
 dependencies = [
  "itertools 0.13.0",
  "num-bigint",
- "p3-dft",
- "p3-field",
- "p3-matrix",
- "p3-maybe-rayon",
- "p3-mds",
- "p3-poseidon2",
- "p3-symmetric",
- "p3-util",
+ "p3-dft 0.2.0",
+ "p3-field 0.2.0",
+ "p3-matrix 0.2.0",
+ "p3-maybe-rayon 0.2.0",
+ "p3-mds 0.2.0",
+ "p3-poseidon2 0.2.0",
+ "p3-symmetric 0.2.0",
+ "p3-util 0.2.0",
  "rand",
  "serde",
+]
+
+[[package]]
+name = "p3-monty-31"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "num-bigint",
+ "p3-dft 0.1.0",
+ "p3-field 0.1.0",
+ "p3-matrix 0.1.0",
+ "p3-maybe-rayon 0.1.0",
+ "p3-mds 0.1.0",
+ "p3-poseidon2 0.1.0",
+ "p3-symmetric 0.1.0",
+ "p3-util 0.1.0",
+ "paste",
+ "rand",
+ "serde",
+ "tracing",
+ "transpose",
+]
+
+[[package]]
+name = "p3-poseidon"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "p3-field 0.1.0",
+ "p3-mds 0.1.0",
+ "p3-symmetric 0.1.0",
+ "rand",
+]
+
+[[package]]
+name = "p3-poseidon2"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "gcd",
+ "p3-field 0.1.0",
+ "p3-mds 0.1.0",
+ "p3-symmetric 0.1.0",
+ "rand",
 ]
 
 [[package]]
@@ -480,10 +761,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fe2252b1ed041cfec362e4da3971df549f8b97f55d9f92b38a347934a4caca2"
 dependencies = [
  "gcd",
- "p3-field",
- "p3-mds",
- "p3-symmetric",
+ "p3-field 0.2.0",
+ "p3-mds 0.2.0",
+ "p3-symmetric 0.2.0",
  "rand",
+]
+
+[[package]]
+name = "p3-symmetric"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
+ "itertools 0.14.0",
+ "p3-field 0.1.0",
+ "serde",
 ]
 
 [[package]]
@@ -493,7 +784,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5614190162fa38196a655a0ff1d6cb29c84c1b1f1cabaf686b7219fc667edf3"
 dependencies = [
  "itertools 0.13.0",
- "p3-field",
+ "p3-field 0.2.0",
+ "serde",
+]
+
+[[package]]
+name = "p3-util"
+version = "0.1.0"
+source = "git+https://github.com/scroll-tech/plonky3?rev=20c3cb9#20c3cb9119da0d5196d7a2e7b2e4f1a62dc8cae7"
+dependencies = [
  "serde",
 ]
 
@@ -505,6 +804,12 @@ checksum = "88dd5ca3eb6ff33cb20084778c32a6d68064a1913b4632437408c5a1098408b3"
 dependencies = [
  "serde",
 ]
+
+[[package]]
+name = "paste"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "pin-project-lite"
@@ -545,10 +850,14 @@ name = "poly"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "p3-challenger",
- "p3-field",
- "p3-goldilocks",
+ "ff_ext",
+ "multilinear_extensions",
+ "p3",
+ "p3-challenger 0.2.0",
+ "p3-field 0.2.0",
+ "p3-goldilocks 0.2.0",
  "p3-mersenne-31",
+ "rand",
  "transcript",
 ]
 
@@ -722,8 +1031,8 @@ name = "sum_check"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "p3-challenger",
- "p3-field",
+ "p3-challenger 0.2.0",
+ "p3-field 0.2.0",
  "p3-keccak",
  "p3-mersenne-31",
  "poly",
@@ -795,8 +1104,8 @@ dependencies = [
 name = "transcript"
 version = "0.1.0"
 dependencies = [
- "p3-challenger",
- "p3-field",
+ "p3-challenger 0.2.0",
+ "p3-field 0.2.0",
  "p3-keccak",
  "p3-mersenne-31",
 ]
