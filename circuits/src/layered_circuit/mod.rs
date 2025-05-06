@@ -2,6 +2,7 @@
 //! This is not an IR for Virgo at this moment.
 pub mod circuit;
 pub mod grk;
+pub mod libra;
 pub mod primitives;
 pub mod utils;
 
