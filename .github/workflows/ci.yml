@@ -33,8 +33,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-      - run: cargo test --workspace --doc
-      - run: cargo test --all-features --workspace --doc
+      - run: cargo +nightly test --workspace --doc
+      - run: cargo +nightly test --all-features --workspace --doc
 
 
   clippy:
@@ -49,7 +49,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-      - run: cargo +stable clippy --workspace --all-targets --all-features
+      - run: cargo +nightly clippy --workspace --all-targets --all-features
         env:
           RUSTFLAGS: -Dwarnings
 
