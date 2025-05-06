@@ -1,7 +1,7 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use p3_field::extension::BinomialExtensionField;
 use p3_mersenne_31::Mersenne31;
-use poly::{utils::barycentric_evaluation, Fields};
+use poly::{Fields, utils::barycentric_evaluation};
 
 type F = Mersenne31;
 type E = BinomialExtensionField<Mersenne31, 3>;
