@@ -11,6 +11,7 @@ use p3_field::{ExtensionField, Field};
 
 pub type CombineFn<F, E> = Rc<dyn Fn(&[Fields<F, E>]) -> Fields<F, E>>;
 
+#[derive(Clone)]
 pub struct VPoly<F: Field, E: ExtensionField<F>> {
     /// The MLEs that make up the virtual polynomial.
     mles: Vec<MultilinearPoly<F, E>>,
