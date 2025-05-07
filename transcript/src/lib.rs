@@ -1,24 +1,20 @@
 use std::marker::PhantomData;
 
-use p3_challenger::FieldChallenger;
-use p3_field::{ExtensionField, Field};
+use p3_challenger::{CanObserve, FieldChallenger, HashChallenger, SerializingChallenger32};
+use p3_field::{ExtensionField, Field, PrimeField32};
+use p3_keccak::Keccak256Hash;
 
-pub struct Transcript<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> {
+pub struct Transcript<F: Field, E: ExtensionField<F>> {
     _marker: PhantomData<(F, E)>,
-    challenger: FC,
+    challenger: SerializingChallenger32<F, HashChallenger<u8, Keccak256Hash, 32>>,
 }
 
-impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> Transcript<F, E, FC> {
-    // Instantiate transcript
-    pub fn init() -> Self {
-        todo!()
-    }
-
+impl<F: Field + PrimeField32, E: ExtensionField<F>> Transcript<F, E> {
     // Instantiate a transcript with a challenger
-    pub fn init_with_challenger(challenger: FC) -> Self {
+    pub fn init() -> Self {
         Self {
             _marker: PhantomData,
-            challenger,
+            challenger: SerializingChallenger32::new(HashChallenger::new(vec![], Keccak256Hash)),
         }
     }
 
@@ -60,18 +56,14 @@ impl<F: Field, E: ExtensionField<F>, FC: FieldChallenger<F>> Transcript<F, E, FC
 
 #[cfg(test)]
 pub mod tests {
-    use p3_challenger::{HashChallenger, SerializingChallenger32};
     use p3_field::{AbstractExtensionField, AbstractField, extension::BinomialExtensionField};
-    use p3_keccak::Keccak256Hash;
     use p3_mersenne_31::Mersenne31;
 
     use crate::Transcript;
 
     #[test]
     fn test_transcript_initialization() {
-        let challenger = SerializingChallenger32::new(HashChallenger::new(vec![], Keccak256Hash));
-
-        let mut transcript = Transcript::init_with_challenger(challenger);
+        let mut transcript = Transcript::init();
 
         let base_field_element = Mersenne31::from_canonical_u32(51);
 
