@@ -1,6 +1,5 @@
 use std::ops::Index;
 
-use p3_challenger::FieldChallenger;
 use p3_field::{ExtensionField, Field};
 
 use crate::{Fields, MultilinearExtension};
@@ -98,10 +97,10 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for MultilinearP
     }
 
     /// Commit `MultilinearPoly` to transcript
-    fn commit_to_transcript<FC: FieldChallenger<F>>(
-        &self,
-        transcript: &mut transcript::Transcript<F, E, FC>,
-    ) {
+    fn commit_to_transcript(&self, transcript: &mut transcript::Transcript<F, E>)
+    where
+        F: p3_field::PrimeField32,
+    {
         for eval in &self.evaluations {
             match eval {
                 Fields::Base(base_elem) => transcript.observe_base_element(&[*base_elem]),

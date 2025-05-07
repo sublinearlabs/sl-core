@@ -1,7 +1,6 @@
 use std::ops::{Add, Mul};
 
-use p3_challenger::FieldChallenger;
-use p3_field::{ExtensionField, Field};
+use p3_field::{ExtensionField, Field, PrimeField32};
 
 pub mod mle;
 pub mod utils;
@@ -80,8 +79,7 @@ pub trait MultilinearExtension<F: Field, E: ExtensionField<F>> {
     /// Returns the number of variables of the polynomial
     fn num_vars(&self) -> usize;
     /// Commit structure to transcript
-    fn commit_to_transcript<FC: FieldChallenger<F>>(
-        &self,
-        transcript: &mut transcript::Transcript<F, E, FC>,
-    );
+    fn commit_to_transcript(&self, transcript: &mut transcript::Transcript<F, E>)
+    where
+        F: PrimeField32;
 }
