@@ -95,7 +95,7 @@ mod test {
         assert!(!is_zero);
 
         assert_eq!(
-            add_mle.evaluate(&vec![
+            add_mle.evaluate(&[
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(1))
@@ -104,7 +104,7 @@ mod test {
         );
 
         assert_eq!(
-            add_mle.evaluate(&vec![
+            add_mle.evaluate(&[
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(0))
@@ -113,7 +113,7 @@ mod test {
         );
 
         assert_eq!(
-            add_mle.evaluate(&vec![
+            add_mle.evaluate(&[
                 Fields::Base(F::from_canonical_u32(1)),
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(0))
@@ -121,7 +121,7 @@ mod test {
             Fields::Extension(E::from_canonical_u32(0))
         );
         assert_eq!(
-            add_mle.evaluate(&vec![
+            add_mle.evaluate(&[
                 Fields::Base(F::from_canonical_u32(1)),
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(1))
@@ -130,7 +130,7 @@ mod test {
         );
 
         assert_eq!(
-            add_mle.evaluate(&vec![
+            add_mle.evaluate(&[
                 Fields::Base(F::from_canonical_u32(1)),
                 Fields::Base(F::from_canonical_u32(1)),
                 Fields::Base(F::from_canonical_u32(1))
@@ -190,7 +190,7 @@ mod test {
         // Evaluating the add mle at the correct binary combination should give a one
         // For the add gate [0,0,0,0,1]
         assert_eq!(
-            add_mle.evaluate(&vec![
+            add_mle.evaluate(&[
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(0)),
                 Fields::Base(F::from_canonical_u32(0)),
@@ -203,7 +203,7 @@ mod test {
         // Evaluating the mul mle at the correct binary combination should give a one
         // For the mul gate [1,1,0,1,1]
         assert_eq!(
-            mul_mle.evaluate(&vec![
+            mul_mle.evaluate(&[
                 Fields::Base(F::from_canonical_u32(1)),
                 Fields::Base(F::from_canonical_u32(1)),
                 Fields::Base(F::from_canonical_u32(0)),
