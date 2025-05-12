@@ -87,35 +87,15 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error> {
-        // Init round polynomials struct
-        let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
-
         // Append polynomial to transcript
         polynomial.commit_to_transcript(transcript);
 
         // Append claimed sum to transcript
         transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
-        let mut poly = polynomial.clone();
-
-        for _ in 0..poly.num_vars() {
-            let mut round_poly = Vec::with_capacity(poly.max_degree());
-            for point in 0..=poly.max_degree() {
-                let value = poly
-                    .partial_evaluate(&[Fields::Extension(E::from_canonical_usize(point))])
-                    .sum_over_hypercube();
-                round_poly.push(value);
-            }
-            transcript.observe_ext_element(
-                &round_poly
-                    .iter()
-                    .map(|val| val.to_extension_field())
-                    .collect::<Vec<E>>(),
-            );
-            let challenge = transcript.sample_challenge();
-            poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
-            round_polynomials.push(round_poly);
-        }
+        // Generate round polynomials
+        let (round_polynomials, _) =
+            SumCheck::<F, E, MLE>::prove_partial(polynomial, transcript).unwrap();
 
         Ok(Self::Proof::new(claimed_sum, round_polynomials))
     }
