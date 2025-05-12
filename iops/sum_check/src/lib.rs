@@ -1,7 +1,6 @@
 //! This module contains the implementation of the sum check protocol.
 use anyhow::Ok;
-use p3_challenger::FieldChallenger;
-use p3_field::{ExtensionField, Field};
+use p3_field::{ExtensionField, Field, PrimeField32};
 use poly::{Fields, MultilinearExtension, utils::barycentric_evaluation};
 use std::marker::PhantomData;
 use transcript::Transcript;
@@ -38,23 +37,28 @@ pub trait SumCheckInterface<F: Field, E: ExtensionField<F>> {
         proof: &Self::Proof,
         transcript: &mut Self::Transcript,
     ) -> Result<bool, anyhow::Error>;
+
+    // Generates sumcheck proof for a polynomial without commiting to the initial polynomial
+    // For use in GKR
+    fn prove_partial(
+        polynomial: &Self::Polynomial,
+        transcript: &mut Self::Transcript,
+    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error>;
+
+    // Partially verifies a sumcheck proof without knowing the initial polynomial
+    // For use in GKR
+    fn verify_partial(
+        proof: &Self::Proof,
+        transcript: &mut Self::Transcript,
+    ) -> (E, Vec<Fields<F, E>>);
 }
 
-pub struct SumCheck<
-    F: Field,
-    E: ExtensionField<F>,
-    FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F, E> + Clone,
-> {
-    _marker: PhantomData<(F, E, FC, MLE)>,
+pub struct SumCheck<F: Field, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone> {
+    _marker: PhantomData<(F, E, MLE)>,
 }
 
-impl<
-    F: Field,
-    E: ExtensionField<F>,
-    FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F, E> + Clone,
-> SumCheck<F, E, FC, MLE>
+impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone>
+    SumCheck<F, E, MLE>
 {
     pub fn new() -> Self {
         Self {
@@ -63,27 +67,19 @@ impl<
     }
 }
 
-impl<
-    F: Field,
-    E: ExtensionField<F>,
-    FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F, E> + Clone,
-> Default for SumCheck<F, E, FC, MLE>
+impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone> Default
+    for SumCheck<F, E, MLE>
 {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<
-    F: Field,
-    E: ExtensionField<F>,
-    FC: FieldChallenger<F>,
-    MLE: MultilinearExtension<F, E> + Clone,
-> SumCheckInterface<F, E> for SumCheck<F, E, FC, MLE>
+impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone>
+    SumCheckInterface<F, E> for SumCheck<F, E, MLE>
 {
     type Polynomial = MLE;
-    type Transcript = Transcript<F, E, FC>;
+    type Transcript = Transcript<F, E>;
     type Proof = SumCheckProof<F, E>;
 
     fn prove(
@@ -91,16 +87,52 @@ impl<
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error> {
-        // Init round polynomials struct
-        let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
+        // Append polynomial to transcript
+        polynomial.commit_to_transcript(transcript);
 
         // Append claimed sum to transcript
         transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
-        // Append polynomial to transcript
+        // Generate round polynomials
+        let (round_polynomials, _) =
+            SumCheck::<F, E, MLE>::prove_partial(polynomial, transcript).unwrap();
+
+        Ok(Self::Proof::new(claimed_sum, round_polynomials))
+    }
+
+    fn verify(
+        polynomial: &Self::Polynomial,
+        proof: &Self::Proof,
+        transcript: &mut Self::Transcript,
+    ) -> Result<bool, anyhow::Error> {
+        // Appends the polynomial to the transcript
         polynomial.commit_to_transcript(transcript);
 
+        // Appends the claimed sum to the transcript
+        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
+
+        // Perform round by round verification
+        let (claimed_sum, challenges) = SumCheck::<F, E, MLE>::verify_partial(proof, transcript);
+
+        // Oracle check
+        assert_eq!(
+            claimed_sum,
+            polynomial.evaluate(&challenges).to_extension_field()
+        );
+
+        Ok(true)
+    }
+
+    fn prove_partial(
+        polynomial: &Self::Polynomial,
+        transcript: &mut Self::Transcript,
+    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error> {
+        // Init round polynomials struct
+        let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
+
         let mut poly = polynomial.clone();
+
+        let mut challenges = vec![];
 
         for _ in 0..poly.num_vars() {
             let mut round_poly = Vec::with_capacity(poly.max_degree());
@@ -119,24 +151,19 @@ impl<
             let challenge = transcript.sample_challenge();
             poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
             round_polynomials.push(round_poly);
+            challenges.push(challenge);
         }
 
-        Ok(Self::Proof::new(claimed_sum, round_polynomials))
+        Ok((round_polynomials, challenges))
     }
 
-    fn verify(
-        polynomial: &Self::Polynomial,
+    fn verify_partial(
         proof: &Self::Proof,
         transcript: &mut Self::Transcript,
-    ) -> Result<bool, anyhow::Error> {
-        // Appends the claimed sum to the transcript
-        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
-
-        // Appends the polynomial to the transcript
-        polynomial.commit_to_transcript(transcript);
-
+    ) -> (E, Vec<Fields<F, E>>) {
         let mut claimed_sum = proof.claimed_sum.to_extension_field();
-        let mut challenges = Vec::with_capacity(polynomial.num_vars());
+
+        let mut challenges = vec![];
 
         // Perform round by round verification
         for round_poly in &proof.round_polynomials {
@@ -155,32 +182,22 @@ impl<
             challenges.push(challenge);
         }
 
-        // Oracle check
-        assert_eq!(
-            claimed_sum,
-            polynomial.evaluate(&challenges).to_extension_field()
-        );
-
-        Ok(true)
+        (claimed_sum, challenges)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use p3_challenger::{HashChallenger, SerializingChallenger32};
     use p3_field::extension::BinomialExtensionField;
-    use p3_keccak::Keccak256Hash;
     use p3_mersenne_31::Mersenne31;
     use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
     use transcript::Transcript;
 
-    use crate::{SumCheck, SumCheckInterface, SumCheckProof};
+    use crate::{SumCheck, SumCheckInterface};
 
     type F = Mersenne31;
 
     type E = BinomialExtensionField<Mersenne31, 3>;
-
-    type FC = SerializingChallenger32<Mersenne31, HashChallenger<u8, Keccak256Hash, 32>>;
 
     fn f_abc() -> MultilinearPoly<F, E> {
         MultilinearPoly::new_from_vec(
@@ -198,14 +215,11 @@ mod tests {
 
         let claimed_sum = polynomial.sum_over_hypercube();
 
-        let challenger = FC::new(HashChallenger::new(vec![], Keccak256Hash));
+        let mut prover_transcript = Transcript::init();
 
-        let mut prover_transcript = Transcript::init_with_challenger(challenger.clone());
+        let proof = SumCheck::prove(claimed_sum, &polynomial, &mut prover_transcript).unwrap();
 
-        let proof: SumCheckProof<Mersenne31, BinomialExtensionField<Mersenne31, 3>> =
-            SumCheck::prove(claimed_sum, &polynomial, &mut prover_transcript).unwrap();
-
-        let mut verify_transcript = Transcript::init_with_challenger(challenger);
+        let mut verify_transcript = Transcript::init();
 
         let verify = SumCheck::verify(&polynomial, &proof, &mut verify_transcript);
 

@@ -7,10 +7,11 @@ use std::{
 
 use crate::mle::MultilinearPoly;
 use crate::{Fields, MultilinearExtension};
-use p3_field::{ExtensionField, Field};
+use p3_field::{ExtensionField, Field, PrimeField32};
 
 pub type CombineFn<F, E> = Rc<dyn Fn(&[Fields<F, E>]) -> Fields<F, E>>;
 
+#[derive(Clone)]
 pub struct VPoly<F: Field, E: ExtensionField<F>> {
     /// The MLEs that make up the virtual polynomial.
     mles: Vec<MultilinearPoly<F, E>>,
@@ -124,10 +125,10 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> 
     }
 
     /// Commit vpoly to transcript
-    fn commit_to_transcript<FC: p3_challenger::FieldChallenger<F>>(
-        &self,
-        transcript: &mut transcript::Transcript<F, E, FC>,
-    ) {
+    fn commit_to_transcript(&self, transcript: &mut transcript::Transcript<F, E>)
+    where
+        F: PrimeField32,
+    {
         // TODO: we need to add the combine function to the transcript
         for mle in &self.mles {
             mle.commit_to_transcript(transcript);
