@@ -4,7 +4,9 @@ use p3_field::{ExtensionField, Field};
 use poly::{Fields, mle::MultilinearPoly};
 
 /// Function calculates the number of variable of the mle for a given circuit layer
-pub fn compute_num_vars(layer_index: usize) -> usize {
+pub fn compute_num_vars(layer_index: usize, max_layer: usize) -> usize {
+    let layer_index = max_layer - layer_index;
+
     if layer_index == 0 {
         return 3;
     }

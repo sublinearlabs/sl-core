@@ -1,57 +1,13 @@
 //! This module contains the implementation of the sum check protocol.
-use anyhow::Ok;
+pub mod interface;
+pub mod primitives;
+
+use interface::SumCheckInterface;
 use p3_field::{ExtensionField, Field, PrimeField32};
 use poly::{Fields, MultilinearExtension, utils::barycentric_evaluation};
+use primitives::SumCheckProof;
 use std::marker::PhantomData;
 use transcript::Transcript;
-
-pub struct SumCheckProof<F: Field, E: ExtensionField<F>> {
-    pub claimed_sum: Fields<F, E>,
-    pub round_polynomials: Vec<Vec<Fields<F, E>>>,
-}
-
-impl<F: Field, E: ExtensionField<F>> SumCheckProof<F, E> {
-    pub fn new(claimed_sum: Fields<F, E>, round_polynomials: Vec<Vec<Fields<F, E>>>) -> Self {
-        Self {
-            claimed_sum,
-            round_polynomials,
-        }
-    }
-}
-
-pub trait SumCheckInterface<F: Field, E: ExtensionField<F>> {
-    type Polynomial;
-    type Transcript;
-    type Proof;
-
-    /// Generate proof for a polynomial sum over the bolean hypercube
-    fn prove(
-        claimed_sum: Fields<F, E>,
-        polynomial: &Self::Polynomial,
-        transcript: &mut Self::Transcript,
-    ) -> Result<Self::Proof, anyhow::Error>;
-
-    /// Verify proof for a polynomial sum over the bolean hypercube
-    fn verify(
-        polynomial: &Self::Polynomial,
-        proof: &Self::Proof,
-        transcript: &mut Self::Transcript,
-    ) -> Result<bool, anyhow::Error>;
-
-    // Generates sumcheck proof for a polynomial without commiting to the initial polynomial
-    // For use in GKR
-    fn prove_partial(
-        polynomial: &Self::Polynomial,
-        transcript: &mut Self::Transcript,
-    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error>;
-
-    // Partially verifies a sumcheck proof without knowing the initial polynomial
-    // For use in GKR
-    fn verify_partial(
-        proof: &Self::Proof,
-        transcript: &mut Self::Transcript,
-    ) -> (E, Vec<Fields<F, E>>);
-}
 
 pub struct SumCheck<F: Field, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone> {
     _marker: PhantomData<(F, E, MLE)>,
@@ -81,6 +37,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
     type Polynomial = MLE;
     type Transcript = Transcript<F, E>;
     type Proof = SumCheckProof<F, E>;
+    type PartialProof = (Vec<Vec<Fields<F, E>>>, Vec<E>);
 
     fn prove(
         claimed_sum: Fields<F, E>,
@@ -188,15 +145,13 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
 
 #[cfg(test)]
 mod tests {
+    use crate::{SumCheck, SumCheckInterface};
     use p3_field::extension::BinomialExtensionField;
     use p3_mersenne_31::Mersenne31;
     use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
     use transcript::Transcript;
 
-    use crate::{SumCheck, SumCheckInterface};
-
     type F = Mersenne31;
-
     type E = BinomialExtensionField<Mersenne31, 3>;
 
     fn f_abc() -> MultilinearPoly<F, E> {
@@ -214,13 +169,11 @@ mod tests {
         let polynomial = f_abc();
 
         let claimed_sum = polynomial.sum_over_hypercube();
-
         let mut prover_transcript = Transcript::init();
 
         let proof = SumCheck::prove(claimed_sum, &polynomial, &mut prover_transcript).unwrap();
 
         let mut verify_transcript = Transcript::init();
-
         let verify = SumCheck::verify(&polynomial, &proof, &mut verify_transcript);
 
         assert!(verify.unwrap());

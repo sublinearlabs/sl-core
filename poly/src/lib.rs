@@ -30,6 +30,17 @@ impl<F: Field, E: ExtensionField<F>> Fields<F, E> {
     pub fn is_base_field(&self) -> bool {
         matches!(self, Fields::Base(_))
     }
+
+    pub fn from_u32_vec(values: Vec<u32>) -> Vec<Self> {
+        values
+            .into_iter()
+            .map(|val| Fields::Base(F::from_canonical_u32(val)))
+            .collect()
+    }
+
+    pub fn from_u32(value: u32) -> Self {
+        Fields::Base(F::from_canonical_u32(value))
+    }
 }
 
 impl<F: Field, E: ExtensionField<F>> Add for Fields<F, E> {
