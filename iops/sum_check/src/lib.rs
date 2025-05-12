@@ -41,10 +41,9 @@ pub trait SumCheckInterface<F: Field, E: ExtensionField<F>> {
     // Generates sumcheck proof for a polynomial without commiting to the initial polynomial
     // For use in GKR
     fn prove_partial(
-        claimed_sum: Fields<F, E>,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
-    ) -> Result<(Self::Proof, Vec<E>), anyhow::Error>;
+    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error>;
 
     // Partially verifies a sumcheck proof without knowing the initial polynomial
     // For use in GKR
@@ -129,8 +128,10 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
         // Appends the polynomial to the transcript
         polynomial.commit_to_transcript(transcript);
 
+        // Appends the claimed sum to the transcript
+        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
+
         // Perform round by round verification
-        // the claimed_sum is commited in the verify_partial
         let (claimed_sum, challenges) = SumCheck::<F, E, MLE>::verify_partial(proof, transcript);
 
         // Oracle check
@@ -143,15 +144,11 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
     }
 
     fn prove_partial(
-        claimed_sum: Fields<F, E>,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
-    ) -> Result<(Self::Proof, Vec<E>), anyhow::Error> {
+    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error> {
         // Init round polynomials struct
         let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
-
-        // Append claimed sum to transcript
-        transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
         let mut poly = polynomial.clone();
 
@@ -177,16 +174,13 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
             challenges.push(challenge);
         }
 
-        Ok((Self::Proof::new(claimed_sum, round_polynomials), challenges))
+        Ok((round_polynomials, challenges))
     }
 
     fn verify_partial(
         proof: &Self::Proof,
         transcript: &mut Self::Transcript,
     ) -> (E, Vec<Fields<F, E>>) {
-        // Appends the claimed sum to the transcript
-        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
-
         let mut claimed_sum = proof.claimed_sum.to_extension_field();
 
         let mut challenges = vec![];
