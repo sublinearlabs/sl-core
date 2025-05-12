@@ -41,10 +41,9 @@ pub trait SumCheckInterface<F: Field, E: ExtensionField<F>> {
     // Generates sumcheck proof for a polynomial without commiting to the initial polynomial
     // For use in GKR
     fn prove_partial(
-        claimed_sum: Fields<F, E>,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
-    ) -> Result<(Self::Proof, Vec<E>), anyhow::Error>;
+    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error>;
 
     // Partially verifies a sumcheck proof without knowing the initial polynomial
     // For use in GKR
@@ -88,35 +87,15 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error> {
-        // Init round polynomials struct
-        let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
-
         // Append polynomial to transcript
         polynomial.commit_to_transcript(transcript);
 
         // Append claimed sum to transcript
         transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
-        let mut poly = polynomial.clone();
-
-        for _ in 0..poly.num_vars() {
-            let mut round_poly = Vec::with_capacity(poly.max_degree());
-            for point in 0..=poly.max_degree() {
-                let value = poly
-                    .partial_evaluate(&[Fields::Extension(E::from_canonical_usize(point))])
-                    .sum_over_hypercube();
-                round_poly.push(value);
-            }
-            transcript.observe_ext_element(
-                &round_poly
-                    .iter()
-                    .map(|val| val.to_extension_field())
-                    .collect::<Vec<E>>(),
-            );
-            let challenge = transcript.sample_challenge();
-            poly = poly.partial_evaluate(&[Fields::Extension(challenge)]);
-            round_polynomials.push(round_poly);
-        }
+        // Generate round polynomials
+        let (round_polynomials, _) =
+            SumCheck::<F, E, MLE>::prove_partial(polynomial, transcript).unwrap();
 
         Ok(Self::Proof::new(claimed_sum, round_polynomials))
     }
@@ -129,8 +108,10 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
         // Appends the polynomial to the transcript
         polynomial.commit_to_transcript(transcript);
 
+        // Appends the claimed sum to the transcript
+        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
+
         // Perform round by round verification
-        // the claimed_sum is commited in the verify_partial
         let (claimed_sum, challenges) = SumCheck::<F, E, MLE>::verify_partial(proof, transcript);
 
         // Oracle check
@@ -143,15 +124,11 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
     }
 
     fn prove_partial(
-        claimed_sum: Fields<F, E>,
         polynomial: &Self::Polynomial,
         transcript: &mut Self::Transcript,
-    ) -> Result<(Self::Proof, Vec<E>), anyhow::Error> {
+    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error> {
         // Init round polynomials struct
         let mut round_polynomials = Vec::with_capacity(polynomial.num_vars());
-
-        // Append claimed sum to transcript
-        transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
         let mut poly = polynomial.clone();
 
@@ -177,16 +154,13 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F,
             challenges.push(challenge);
         }
 
-        Ok((Self::Proof::new(claimed_sum, round_polynomials), challenges))
+        Ok((round_polynomials, challenges))
     }
 
     fn verify_partial(
         proof: &Self::Proof,
         transcript: &mut Self::Transcript,
     ) -> (E, Vec<Fields<F, E>>) {
-        // Appends the claimed sum to the transcript
-        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
-
         let mut claimed_sum = proof.claimed_sum.to_extension_field();
 
         let mut challenges = vec![];
