@@ -50,13 +50,11 @@ impl<F: Field, E: ExtensionField<F>> Add for Fields<F, E> {
         match self {
             Fields::Base(lhs) => match rhs {
                 Fields::Base(rhs_inner) => Fields::Base(lhs + rhs_inner),
-                Fields::Extension(_) => panic!("mis-matched type"),
-                // Fields::Extension(rhs_inner) => Fields::Extension(rhs_inner + lhs),
+                Fields::Extension(rhs_inner) => Fields::Extension(rhs_inner + lhs),
             },
             Fields::Extension(lhs) => match rhs {
-                Fields::Base(_) => panic!("mis-matched type"),
+                Fields::Base(rhs_inner) => Fields::Extension(lhs + rhs_inner),
                 Fields::Extension(rhs_inner) => Fields::Extension(lhs + rhs_inner),
-                // Fields::Extension(rhs_inner) => Fields::Extension(lhs + rhs_inner),
             },
         }
     }
@@ -69,12 +67,10 @@ impl<F: Field, E: ExtensionField<F>> Mul for Fields<F, E> {
         match self {
             Fields::Base(lhs) => match rhs {
                 Fields::Base(rhs_inner) => Fields::Base(lhs * rhs_inner),
-                Fields::Extension(_) => panic!("mis-matched type"),
-                // Fields::Extension(rhs_inner) => Fields::Extension(rhs_inner * lhs),
+                Fields::Extension(rhs_inner) => Fields::Extension(rhs_inner * lhs),
             },
             Fields::Extension(lhs) => match rhs {
-                // Fields::Base(rhs_inner) => Fields::Extension(lhs * rhs_inner),
-                Fields::Base(_) => panic!("mis-matched type"),
+                Fields::Base(rhs_inner) => Fields::Extension(lhs * rhs_inner),
                 Fields::Extension(rhs_inner) => Fields::Extension(lhs * rhs_inner),
             },
         }
@@ -143,11 +139,16 @@ mod tests {
 
         let base_field_element = Fields::Base(F::new(2));
 
-        let res = ext_field_element + base_field_element;
+        // Check for commutativity
+        let res1 = ext_field_element + base_field_element;
+
+        let res2 = base_field_element + ext_field_element;
 
         let expected = Fields::Extension(E::from_base(F::new(7)));
 
-        assert_eq!(res, expected);
+        assert_eq!(res1, expected);
+
+        assert_eq!(res2, expected);
     }
 
     #[test]
@@ -182,10 +183,15 @@ mod tests {
 
         let base_field_element = Fields::Base(F::new(2));
 
-        let res = ext_field_element * base_field_element;
+        // Check commutativity
+        let res1 = ext_field_element * base_field_element;
+
+        let res2 = base_field_element * ext_field_element;
 
         let expected = Fields::Extension(E::from_base(F::new(10)));
 
-        assert_eq!(res, expected);
+        assert_eq!(res1, expected);
+
+        assert_eq!(res2, expected);
     }
 }
