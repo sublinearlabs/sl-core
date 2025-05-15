@@ -51,10 +51,12 @@ impl<F: Field, E: ExtensionField<F>> Add for Fields<F, E> {
             Fields::Base(lhs) => match rhs {
                 Fields::Base(rhs_inner) => Fields::Base(lhs + rhs_inner),
                 Fields::Extension(_) => panic!("mis-matched type"),
+                // Fields::Extension(rhs_inner) => Fields::Extension(rhs_inner + lhs),
             },
             Fields::Extension(lhs) => match rhs {
                 Fields::Base(_) => panic!("mis-matched type"),
                 Fields::Extension(rhs_inner) => Fields::Extension(lhs + rhs_inner),
+                // Fields::Extension(rhs_inner) => Fields::Extension(lhs + rhs_inner),
             },
         }
     }
@@ -68,8 +70,10 @@ impl<F: Field, E: ExtensionField<F>> Mul for Fields<F, E> {
             Fields::Base(lhs) => match rhs {
                 Fields::Base(rhs_inner) => Fields::Base(lhs * rhs_inner),
                 Fields::Extension(_) => panic!("mis-matched type"),
+                // Fields::Extension(rhs_inner) => Fields::Extension(rhs_inner * lhs),
             },
             Fields::Extension(lhs) => match rhs {
+                // Fields::Base(rhs_inner) => Fields::Extension(lhs * rhs_inner),
                 Fields::Base(_) => panic!("mis-matched type"),
                 Fields::Extension(rhs_inner) => Fields::Extension(lhs * rhs_inner),
             },
@@ -93,4 +97,95 @@ pub trait MultilinearExtension<F: Field, E: ExtensionField<F>> {
     fn commit_to_transcript(&self, transcript: &mut transcript::Transcript<F, E>)
     where
         F: PrimeField32;
+}
+
+#[cfg(test)]
+mod tests {
+    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
+
+    use p3_mersenne_31::Mersenne31;
+
+    use crate::Fields;
+
+    type F = Mersenne31;
+
+    type E = BinomialExtensionField<F, 3>;
+
+    #[test]
+    fn test_base_and_base_fields_addition() {
+        let rhs_base_field_element = Fields::<F, E>::Base(F::new(2));
+
+        let lhs_base_field_element = Fields::Base(F::new(2));
+
+        let res = rhs_base_field_element + lhs_base_field_element;
+
+        let expected = Fields::Base(F::new(4));
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn test_extension_and_extension_fields_addition() {
+        let lhs_ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let rhs_ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let res = lhs_ext_field_element + rhs_ext_field_element;
+
+        let expected = Fields::Extension(E::from_base(F::new(10)));
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn test_extension_and_base_fields_addition() {
+        let ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let base_field_element = Fields::Base(F::new(2));
+
+        let res = ext_field_element + base_field_element;
+
+        let expected = Fields::Extension(E::from_base(F::new(7)));
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn test_base_and_base_fields_multiplication() {
+        let rhs_base_field_element = Fields::<F, E>::Base(F::new(2));
+
+        let lhs_base_field_element = Fields::Base(F::new(3));
+
+        let res = rhs_base_field_element * lhs_base_field_element;
+
+        let expected = Fields::Base(F::new(6));
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn test_extension_and_extension_fields_multiplication() {
+        let lhs_ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let rhs_ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let res = lhs_ext_field_element * rhs_ext_field_element;
+
+        let expected = Fields::Extension(E::from_base(F::new(25)));
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn test_extension_and_base_fields_multiplication() {
+        let ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let base_field_element = Fields::Base(F::new(2));
+
+        let res = ext_field_element * base_field_element;
+
+        let expected = Fields::Extension(E::from_base(F::new(10)));
+
+        assert_eq!(res, expected);
+    }
 }
