@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
 use p3_field::{ExtensionField, Field, PrimeField32};
 
@@ -72,6 +72,59 @@ impl<F: Field, E: ExtensionField<F>> Mul for Fields<F, E> {
             Fields::Extension(lhs) => match rhs {
                 Fields::Base(rhs_inner) => Fields::Extension(lhs * rhs_inner),
                 Fields::Extension(rhs_inner) => Fields::Extension(lhs * rhs_inner),
+            },
+        }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Sub for Fields<F, E> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match self {
+            Fields::Base(lhs) => match rhs {
+                Fields::Base(rhs_inner) => Fields::Base(lhs - rhs_inner),
+                Fields::Extension(rhs_inner) => Fields::Extension(rhs_inner - lhs),
+            },
+            Fields::Extension(lhs) => match rhs {
+                Fields::Base(rhs_inner) => Fields::Extension(lhs - rhs_inner),
+                Fields::Extension(rhs_inner) => Fields::Extension(lhs - rhs_inner),
+            },
+        }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Neg for Fields<F, E> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        match self {
+            Fields::Base(val) => Fields::Base(-val),
+            Fields::Extension(val) => Fields::Extension(-val),
+        }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> AddAssign for Fields<F, E> {
+    fn add_assign(&mut self, rhs: Self) {
+        match self {
+            Fields::Base(lhs) => match rhs {
+                Fields::Base(rhs_inner) => {
+                    *lhs += rhs_inner;
+                }
+                Fields::Extension(_) => {
+                    panic!(
+                        "Error encountered. Do 'rhs += lhs' instead or convert base field to extension field"
+                    );
+                }
+            },
+            Fields::Extension(lhs) => match rhs {
+                Fields::Base(rhs_inner) => {
+                    *lhs += rhs_inner;
+                }
+                Fields::Extension(rhs_inner) => {
+                    *lhs += rhs_inner;
+                }
             },
         }
     }
@@ -193,5 +246,72 @@ mod tests {
         assert_eq!(res1, expected);
 
         assert_eq!(res2, expected);
+    }
+
+    #[test]
+    fn test_extension_and_base_fields_subtraction() {
+        let ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let base_field_element = Fields::Base(F::new(2));
+
+        // Check commutativity
+        let res1 = ext_field_element - base_field_element;
+
+        let res2 = base_field_element - ext_field_element;
+
+        let expected = Fields::Extension(E::from_base(F::new(3)));
+
+        assert_eq!(res1, expected);
+
+        assert_eq!(res2, expected);
+    }
+
+    #[test]
+    fn test_extension_and_base_fields_add_assign() {
+        let mut ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let mut base_field_element = Fields::Base(F::new(2));
+
+        ext_field_element += base_field_element;
+
+        let expected = Fields::Extension(E::from_base(F::new(7)));
+
+        assert_eq!(ext_field_element, expected);
+
+        // Check base_field - base_field add_assign
+        base_field_element += base_field_element;
+
+        assert_eq!(base_field_element, Fields::Base(F::new(4)));
+
+        // check extension_field - extension_field add_assign
+        ext_field_element += ext_field_element;
+
+        assert_eq!(
+            ext_field_element,
+            Fields::Extension(E::from_base(F::new(14)))
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_base_and_extension_fields_add_assign() {
+        let ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let mut base_field_element = Fields::Base(F::new(2));
+
+        base_field_element += ext_field_element;
+    }
+
+    #[test]
+    fn test_extension_and_base_fields_negation() {
+        let ext_field_element = -Fields::<F, E>::Extension(E::from_base(F::new(5)));
+
+        let base_field_element = -Fields::Base(F::new(2));
+
+        let res = ext_field_element + base_field_element;
+
+        let expected = -Fields::Extension(E::from_base(F::new(7)));
+
+        assert_eq!(res, expected);
     }
 }
