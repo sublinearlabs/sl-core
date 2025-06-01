@@ -132,6 +132,21 @@ impl<F: Field, E: ExtensionField<F>> From<Vec<E>> for MultilinearPoly<F, E> {
     }
 }
 
+impl<F: Field, E: ExtensionField<F>> From<&Vec<F>> for MultilinearPoly<F, E> {
+    fn from(evaluations: &Vec<F>) -> Self {
+        let n_vars = (evaluations.len() as f64).log2() as usize;
+        let evaluations = evaluations
+            .iter()
+            .map(|&x| Fields::<F, E>::Base(x))
+            .collect::<Vec<_>>();
+
+        MultilinearPoly {
+            n_vars,
+            evaluations,
+        }
+    }
+}
+
 impl<F: Field, E: ExtensionField<F>> From<Vec<Fields<F, E>>> for MultilinearPoly<F, E> {
     fn from(evaluations: Vec<Fields<F, E>>) -> Self {
         let n_vars = (evaluations.len() as f64).log2() as usize;
