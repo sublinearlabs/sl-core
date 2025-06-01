@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{Add, Index, Mul, Sub};
 
 use p3_field::{ExtensionField, Field};
 
@@ -115,6 +115,81 @@ impl<F: Field, E: ExtensionField<F>> Index<usize> for MultilinearPoly<F, E> {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.evaluations[index]
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> From<Vec<E>> for MultilinearPoly<F, E> {
+    fn from(evaluations: Vec<E>) -> Self {
+        let n_vars = (evaluations.len() as f64).log2() as usize;
+        let evaluations = evaluations
+            .into_iter()
+            .map(|eval| Fields::Extension(eval))
+            .collect();
+        MultilinearPoly {
+            n_vars,
+            evaluations,
+        }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> From<Vec<Fields<F, E>>> for MultilinearPoly<F, E> {
+    fn from(evaluations: Vec<Fields<F, E>>) -> Self {
+        let n_vars = (evaluations.len() as f64).log2() as usize;
+
+        MultilinearPoly {
+            n_vars,
+            evaluations,
+        }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Add for MultilinearPoly<F, E> {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self::Output {
+        if self.n_vars != other.n_vars {
+            panic!("Polynomials must have the same number of variables");
+        }
+
+        let mut new_evaluations = Vec::new();
+
+        for i in 0..self.evaluations.len() {
+            new_evaluations.push(self.evaluations[i] + other.evaluations[i]);
+        }
+
+        MultilinearPoly::from(new_evaluations)
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Sub for MultilinearPoly<F, E> {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        if self.n_vars != other.n_vars {
+            panic!("Polynomials must have the same number of variables");
+        }
+
+        let mut new_evaluations = Vec::new();
+
+        for i in 0..self.evaluations.len() {
+            new_evaluations.push(self.evaluations[i] - other.evaluations[i]);
+        }
+
+        MultilinearPoly::from(new_evaluations)
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Mul<Fields<F, E>> for MultilinearPoly<F, E> {
+    type Output = Self;
+
+    fn mul(self, other: Fields<F, E>) -> Self::Output {
+        let evaluations = self
+            .evaluations
+            .iter()
+            .map(|eval| *eval * other)
+            .collect::<Vec<_>>();
+
+        MultilinearPoly::from(evaluations)
     }
 }
 
