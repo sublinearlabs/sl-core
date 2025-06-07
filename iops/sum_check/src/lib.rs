@@ -4,7 +4,7 @@ pub mod primitives;
 
 use interface::SumCheckInterface;
 use p3_field::{ExtensionField, Field, PrimeField32};
-use poly::{Fields, MultilinearExtension, utils::barycentric_evaluation};
+use poly::{utils::barycentric_evaluation, Fields, MultilinearExtension};
 use primitives::SumCheckProof;
 use std::marker::PhantomData;
 use transcript::Transcript;
@@ -148,7 +148,7 @@ mod tests {
     use crate::{SumCheck, SumCheckInterface};
     use p3_field::extension::BinomialExtensionField;
     use p3_mersenne_31::Mersenne31;
-    use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
+    use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
     use transcript::Transcript;
 
     type F = Mersenne31;
