@@ -3,6 +3,7 @@ use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 use p3_field::{ExtensionField, Field, PrimeField32};
 
 pub mod mle;
+pub mod padded_poly;
 pub mod utils;
 pub mod vpoly;
 
@@ -150,7 +151,7 @@ pub trait MultilinearExtension<F: Field, E: ExtensionField<F>> {
 
 #[cfg(test)]
 mod tests {
-    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
 
     use p3_mersenne_31::Mersenne31;
 
