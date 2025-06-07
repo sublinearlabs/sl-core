@@ -1,16 +1,35 @@
+use std::marker::PhantomData;
+
 use crate::MultilinearExtension;
+use p3_field::{ExtensionField, Field};
 
 // TODO: add documentation
-// TODO: also document each element
-pub struct PaddedPoly<T: MultilinearExtension> {
-    base_poly: T,
-    n_vars: usize,
+enum BasePoly<E, T> {
+    Eval(E),
+    MLE(T),
 }
 
-impl<T: MultilinearExtension> PaddedPoly<T> {
-    fn new(base_poly: T, n_vars: usize) -> Self {
-        // ensure that the setup actually requires padding
-        assert!(n_vars > base_poly.num_vars());
-        Self { base_poly, n_vars }
+// TODO: add documentation
+pub struct PaddedPoly<F, E, T> {
+    base_poly: BasePoly<E, T>,
+    pad_count: usize,
+    _marker: PhantomData<F>,
+}
+
+impl<F, E, T> PaddedPoly<F, E, T>
+where
+    F: Field,
+    E: ExtensionField<F>,
+    T: MultilinearExtension<F, E>,
+{
+    fn new(base_poly: T, pad_count: usize) -> Self {
+        assert!(pad_count >= 1);
+        assert!(base_poly.num_vars() >= 1);
+
+        Self {
+            base_poly: BasePoly::MLE(base_poly),
+            pad_count,
+            _marker: PhantomData,
+        }
     }
 }
