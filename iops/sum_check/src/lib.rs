@@ -30,7 +30,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error> {
         // Append polynomial to transcript
-        polynomial.commit_to_transcript(transcript);
+        polynomial.commit(transcript);
 
         // Append claimed sum to transcript
         transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
@@ -48,7 +48,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
         transcript: &mut Self::Transcript,
     ) -> Result<bool, anyhow::Error> {
         // Appends the polynomial to the transcript
-        polynomial.commit_to_transcript(transcript);
+        polynomial.commit(transcript);
 
         // Appends the claimed sum to the transcript
         transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
@@ -122,7 +122,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
 
 #[cfg(test)]
 mod tests {
-    use crate::{SumCheck, SumCheckInterface};
+    use crate::{SumCheck, SumCheckInterface, Sumcheckable};
     use p3_field::extension::BinomialExtensionField;
     use p3_mersenne_31::Mersenne31;
     use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
@@ -148,7 +148,8 @@ mod tests {
         let claimed_sum = polynomial.sum_over_hypercube();
         let mut prover_transcript = Transcript::init();
 
-        let proof = SumCheck::prove(claimed_sum, &polynomial, &mut prover_transcript).unwrap();
+        let proof =
+            SumCheck::prove(claimed_sum, polynomial.clone(), &mut prover_transcript).unwrap();
 
         let mut verify_transcript = Transcript::init();
         let verify = SumCheck::verify(&polynomial, &proof, &mut verify_transcript);
