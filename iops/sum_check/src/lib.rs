@@ -1,6 +1,7 @@
 //! This module contains the implementation of the sum check protocol.
 pub mod interface;
 pub mod primitives;
+pub mod sumcheckable;
 
 use interface::SumCheckInterface;
 use p3_field::{ExtensionField, Field, PrimeField32};
