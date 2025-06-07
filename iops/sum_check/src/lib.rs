@@ -6,13 +6,12 @@ pub mod sumcheckable;
 use crate::sumcheckable::Sumcheckable;
 use interface::SumCheckInterface;
 use p3_field::{ExtensionField, Field, PrimeField32};
-use poly::{utils::barycentric_evaluation, Fields, MultilinearExtension};
+use poly::{utils::barycentric_evaluation, Fields};
 use primitives::SumCheckProof;
 use std::marker::PhantomData;
 use transcript::Transcript;
 
 // TODO: consider cleaning up this file
-
 pub struct SumCheck<F: Field, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clone> {
     _marker: PhantomData<(F, E, T)>,
 }
@@ -27,7 +26,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
 
     fn prove(
         claimed_sum: Fields<F, E>,
-        polynomial: &Self::Polynomial,
+        mut polynomial: Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<Self::Proof, anyhow::Error> {
         // Append polynomial to transcript
@@ -38,7 +37,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
 
         // Generate round polynomials
         let (round_polynomials, _) =
-            SumCheck::<F, E, T>::prove_partial(polynomial, transcript).unwrap();
+            SumCheck::<F, E, T>::prove_partial(&mut polynomial, transcript).unwrap();
 
         Ok(Self::Proof::new(claimed_sum, round_polynomials))
     }
@@ -67,19 +66,16 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
     }
 
     fn prove_partial(
-        polynomial: &Self::Polynomial,
+        polynomial: &mut Self::Polynomial,
         transcript: &mut Self::Transcript,
     ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error> {
         // Init round polynomials struct
         let mut round_polynomials = Vec::with_capacity(polynomial.no_of_rounds());
 
-        // TODO: is this clone necessary?
-        let mut poly = polynomial.clone();
-
         let mut challenges = vec![];
 
-        for _ in 0..poly.no_of_rounds() {
-            let round_message = poly.round_message();
+        for _ in 0..polynomial.no_of_rounds() {
+            let round_message = polynomial.round_message();
             transcript.observe_ext_element(
                 &round_message
                     .iter()
@@ -87,7 +83,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
                     .collect::<Vec<E>>(),
             );
             let challenge = transcript.sample_challenge();
-            poly.receive_challenge(&Fields::Extension(challenge));
+            polynomial.receive_challenge(&Fields::Extension(challenge));
             round_polynomials.push(round_message);
             challenges.push(challenge);
         }
