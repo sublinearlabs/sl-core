@@ -1,5 +1,6 @@
 use p3_field::{ExtensionField, Field};
 use poly::Fields;
+use transcript::Transcript;
 
 // TODO: add documentation
 trait Sumcheckable<F: Field, E: ExtensionField<F>> {
@@ -12,4 +13,7 @@ trait Sumcheckable<F: Field, E: ExtensionField<F>> {
 
     // TODO: add documentation
     fn eval(&self, point: &[Fields<F, E>]) -> Fields<F, E>;
+
+    // TODO: add documentation
+    fn commit_to_transcript(&self, transcript: &mut Transcript<F, E>);
 }
