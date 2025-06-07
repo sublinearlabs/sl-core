@@ -15,24 +15,6 @@ pub struct SumCheck<F: Field, E: ExtensionField<F>, MLE: MultilinearExtension<F,
 }
 
 impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone>
-    SumCheck<F, E, MLE>
-{
-    pub fn new() -> Self {
-        Self {
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone> Default
-    for SumCheck<F, E, MLE>
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<F: Field + PrimeField32, E: ExtensionField<F>, MLE: MultilinearExtension<F, E> + Clone>
     SumCheckInterface<F, E> for SumCheck<F, E, MLE>
 {
     type Polynomial = MLE;
