@@ -122,7 +122,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
 
 #[cfg(test)]
 mod tests {
-    use crate::{SumCheck, SumCheckInterface, Sumcheckable};
+    use crate::{SumCheck, SumCheckInterface};
     use p3_field::extension::BinomialExtensionField;
     use p3_mersenne_31::Mersenne31;
     use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};

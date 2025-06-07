@@ -1,5 +1,5 @@
 use p3_field::{ExtensionField, Field, PrimeField32};
-use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
+use poly::{Fields, MultilinearExtension};
 use transcript::Transcript;
 
 // TODO: add documentation
@@ -21,10 +21,11 @@ pub trait Sumcheckable<F: Field, E: ExtensionField<F>> {
     fn commit(&self, transcript: &mut Transcript<F, E>);
 }
 
-impl<F, E> Sumcheckable<F, E> for MultilinearPoly<F, E>
+impl<F, E, MLE> Sumcheckable<F, E> for MLE
 where
     F: Field + PrimeField32,
     E: ExtensionField<F>,
+    MLE: MultilinearExtension<F, E>,
 {
     fn no_of_rounds(&self) -> usize {
         self.num_vars()
@@ -43,9 +44,6 @@ where
     }
 
     fn round_message(&self) -> Vec<Fields<F, E>> {
-        // TODO: only using this logic because I might want this to work
-        //  for everything that implements MultilinearExtension
-        //  if I cannot then I should just implement the most efficient version of this
         (0..=self.max_degree())
             .map(|p| Fields::Extension(E::from_canonical_usize(p)))
             .map(|p| self.partial_evaluate(&[p]).sum_over_hypercube())
