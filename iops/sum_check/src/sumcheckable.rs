@@ -39,10 +39,17 @@ where
     }
 
     fn receive_challenge(&mut self, challenge: &Fields<F, E>) {
+        // TODO: this is buggy because it doesn't update
         self.partial_evaluate(&[*challenge]);
     }
 
     fn round_message(&self) -> Vec<Fields<F, E>> {
-        todo!()
+        // TODO: only using this logic because I might want this to work
+        //  for everything that implements MultilinearExtension
+        //  if I cannot then I should just implement the most efficient version of this
+        (0..=self.max_degree())
+            .map(|p| Fields::Extension(E::from_canonical_usize(p)))
+            .map(|p| self.partial_evaluate(&[p]).sum_over_hypercube())
+            .collect()
     }
 }
