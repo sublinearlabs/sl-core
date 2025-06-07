@@ -39,8 +39,7 @@ where
     }
 
     fn receive_challenge(&mut self, challenge: &Fields<F, E>) {
-        // TODO: this is buggy because it doesn't update
-        self.partial_evaluate(&[*challenge]);
+        *self = self.partial_evaluate(&[*challenge]);
     }
 
     fn round_message(&self) -> Vec<Fields<F, E>> {
