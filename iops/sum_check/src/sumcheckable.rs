@@ -2,22 +2,21 @@ use p3_field::{ExtensionField, Field, PrimeField32};
 use poly::{Fields, MultilinearExtension};
 use transcript::Transcript;
 
-// TODO: add documentation
+/// Trait for structures that you can run the `Sumcheck` protocol over
 pub trait Sumcheckable<F: Field, E: ExtensionField<F>> {
-    // TODO: add documentation
+    /// Number of sumcheck rounds
     fn no_of_rounds(&self) -> usize;
 
-    // TODO: can we be more strict with the number of elements in the round poly at this layer??
-    //  enforce correctness at the type level
+    /// Returns the round message based on current state
     fn round_message(&self) -> Vec<Fields<F, E>>;
 
-    // TODO: add documentation
+    /// Receives challenge and updates state
     fn receive_challenge(&mut self, challenge: &Fields<F, E>);
 
-    // TODO: add documentation
+    /// Eval structure at some given point. Needed for the `oracle check`
     fn eval(&self, point: &[Fields<F, E>]) -> Fields<F, E>;
 
-    // TODO: add documentation
+    /// Commit state to some transcript
     fn commit(&self, transcript: &mut Transcript<F, E>);
 }
 
