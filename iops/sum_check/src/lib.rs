@@ -15,34 +15,47 @@ pub struct Subclaim<T> {
     challenges: Vec<T>,
 }
 
+// TODO: clean up
+
 pub struct Sumcheck {}
 
 impl Sumcheck {
     fn prove<S: Sumcheckable>(
-        structure: S,
+        mut structure: S,
         claimed_sum: S::Item,
         transcript: &mut S::Transcript,
     ) -> Result<SumcheckProof<S::Item>, anyhow::Error> {
         // append public input to the transcript
         structure.commit(transcript);
-        S::commit_items(&[&claimed_sum], transcript);
+        S::commit_items(&[claimed_sum.clone()], transcript);
 
-        Ok(Self::prove_partial(structure, claimed_sum, transcript)?.0)
+        Ok(Self::prove_partial(&mut structure, claimed_sum, transcript)?.0)
     }
 
     fn prove_partial<S: Sumcheckable>(
-        structure: S,
+        structure: &mut S,
         claimed_sum: S::Item,
         transcript: &mut S::Transcript,
     ) -> Result<(SumcheckProof<S::Item>, Vec<S::Item>), anyhow::Error> {
-        //let mut round_polynomials = Vec::with_capacity(structure.no_of_rounds());
-        //let mut challenges = vec![];
-        //
-        //for _ in 0..structure.no_of_rounds() {
-        //    let round_message = structure.round_message();
-        //    //transcript.observe_ext_element(&round_message.iter().map(|val| val.to_extension ))
-        //}
-        todo!()
+        let mut round_polynomials = Vec::with_capacity(structure.no_of_rounds());
+        let mut challenges = vec![];
+
+        for _ in 0..structure.no_of_rounds() {
+            let round_message = structure.round_message();
+            S::commit_items(round_message.as_slice(), transcript);
+            let challenge = S::sample_challenge(transcript);
+            structure.receive_challenge(&challenge);
+            round_polynomials.push(round_message);
+            challenges.push(challenge);
+        }
+
+        Ok((
+            SumcheckProof {
+                claimed_sum,
+                round_polynomials,
+            },
+            challenges,
+        ))
     }
 
     fn verify<S: Sumcheckable>(

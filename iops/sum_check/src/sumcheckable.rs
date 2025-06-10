@@ -6,7 +6,7 @@ pub trait Sumcheckable {
     /// Assumes we are running sumcheck over a structure that outputs
     /// uniformed type elements also process same type.
     /// Item represents that type for the given structure.
-    type Item;
+    type Item: Clone;
     /// Transcript type to allow for structure commitment
     type Transcript;
 
@@ -22,11 +22,17 @@ pub trait Sumcheckable {
     /// Eval structure at some given point. Needed for the `oracle check`
     fn eval(&self, point: &[Self::Item]) -> Self::Item;
 
+    // TODO: deeply contemplate if this is the right place to put the transcript
+    //  definitions (doesn't feel right, something better could be done)
+
     /// commit structure state to some transacript
     fn commit(&self, transcript: &mut Self::Transcript);
 
     /// commit array of items
-    fn commit_items(items: &[&Self::Item], transcript: &mut Self::Transcript);
+    fn commit_items(items: &[Self::Item], transcript: &mut Self::Transcript);
+
+    /// sample challenge
+    fn sample_challenge(transcript: &mut Self::Transcript) -> Self::Item;
 }
 
 impl<T: MultilinearExtension> Sumcheckable for T
@@ -59,12 +65,16 @@ where
         self.commit_to_transcript(transcript);
     }
 
-    fn commit_items(items: &[&Self::Item], transcript: &mut Self::Transcript) {
+    fn commit_items(items: &[Self::Item], transcript: &mut Self::Transcript) {
         transcript.observe_ext_element(
             &items
                 .iter()
                 .map(|t| t.to_extension_field())
                 .collect::<Vec<_>>(),
         )
+    }
+
+    fn sample_challenge(transcript: &mut Self::Transcript) -> Self::Item {
+        Fields::Extension(transcript.sample_challenge())
     }
 }
