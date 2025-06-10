@@ -1,7 +1,54 @@
 //! This module contains the implementation of the sum check protocol.
+
+use sumcheckable::Sumcheckable;
 //pub mod interface;
 //pub mod primitives;
 pub mod sumcheckable;
+
+pub struct SumcheckProof<T> {
+    claimed_sum: T,
+    round_polynomials: Vec<Vec<T>>,
+}
+
+pub struct Subclaim<T> {
+    claimed_sum: T,
+    challenges: Vec<T>,
+}
+
+pub struct Sumcheck {}
+
+impl Sumcheck {
+    fn prove<S: Sumcheckable>(
+        structure: S,
+        claimed_sum: S::Item,
+        transcript: &mut S::Transcript,
+    ) -> Result<SumcheckProof<S::Item>, anyhow::Error> {
+        todo!()
+    }
+
+    fn prove_partial<S: Sumcheckable>(
+        structure: S,
+        claimed_sum: S::Item,
+        transcript: &mut S::Transcript,
+    ) -> Result<(SumcheckProof<S::Item>, Vec<S::Item>), anyhow::Error> {
+        todo!()
+    }
+
+    fn verify<S: Sumcheckable>(
+        structure: S,
+        proof: SumcheckProof<S::Item>,
+        transcript: &mut S::Transcript,
+    ) -> Result<bool, anyhow::Error> {
+        todo!()
+    }
+
+    fn verify_partial<S: Sumcheckable>(
+        proof: SumcheckProof<S::Item>,
+        transcript: &mut S::Transcript,
+    ) -> Result<Subclaim<S::Item>, anyhow::Error> {
+        todo!()
+    }
+}
 
 //use interface::SumCheckInterface;
 //use p3_field::{ExtensionField, Field, PrimeField32};
