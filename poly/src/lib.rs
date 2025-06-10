@@ -131,7 +131,12 @@ impl<F: Field, E: ExtensionField<F>> AddAssign for Fields<F, E> {
 }
 
 /// Multilinear Extension Trait
-pub trait MultilinearExtension<F: Field, E: ExtensionField<F>> {
+pub trait MultilinearExtension {
+    /// Associated type for Field
+    type Field: Field;
+    /// Associated type for Field Extension
+    type Extension: ExtensionField<Self::Field>;
+
     /// Fix all variables
     fn evaluate(&self, point: &[Fields<F, E>]) -> Fields<F, E>;
     /// Partially fix variables starting from the first
@@ -150,7 +155,7 @@ pub trait MultilinearExtension<F: Field, E: ExtensionField<F>> {
 
 #[cfg(test)]
 mod tests {
-    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
 
     use p3_mersenne_31::Mersenne31;
 
