@@ -26,7 +26,7 @@ pub trait Sumcheckable {
     fn commit(&self, transcript: &mut Self::Transcript);
 
     /// commit array of items
-    fn commit_items(&self, items: &[Self::Item], transcript: &mut Self::Transcript);
+    fn commit_items(items: &[&Self::Item], transcript: &mut Self::Transcript);
 }
 
 impl<T: MultilinearExtension> Sumcheckable for T
@@ -59,7 +59,7 @@ where
         self.commit_to_transcript(transcript);
     }
 
-    fn commit_items(&self, items: &[Self::Item], transcript: &mut Self::Transcript) {
+    fn commit_items(items: &[&Self::Item], transcript: &mut Self::Transcript) {
         transcript.observe_ext_element(
             &items
                 .iter()

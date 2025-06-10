@@ -25,8 +25,7 @@ impl Sumcheck {
     ) -> Result<SumcheckProof<S::Item>, anyhow::Error> {
         // append public input to the transcript
         structure.commit(transcript);
-        // TODO: fix transcript
-        //transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
+        S::commit_items(&[&claimed_sum], transcript);
 
         Ok(Self::prove_partial(structure, claimed_sum, transcript)?.0)
     }
