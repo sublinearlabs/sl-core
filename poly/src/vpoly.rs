@@ -71,7 +71,10 @@ impl<F: Field, E: ExtensionField<F>> VPoly<F, E> {
     }
 }
 
-impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> {
+impl<F: Field, E: ExtensionField<F>> MultilinearExtension for VPoly<F, E> {
+    type Field = F;
+    type Extension = E;
+
     /// Evaluates the virtual polynomial at a given point.
     fn evaluate(&self, point: &[Fields<F, E>]) -> Fields<F, E> {
         let values = self
@@ -141,7 +144,7 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_field::{AbstractField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;

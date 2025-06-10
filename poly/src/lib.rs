@@ -138,19 +138,24 @@ pub trait MultilinearExtension {
     type Extension: ExtensionField<Self::Field>;
 
     /// Fix all variables
-    fn evaluate(&self, point: &[Fields<F, E>]) -> Fields<F, E>;
+    fn evaluate(
+        &self,
+        point: &[Fields<Self::Field, Self::Extension>],
+    ) -> Fields<Self::Field, Self::Extension>;
     /// Partially fix variables starting from the first
-    fn partial_evaluate(&self, point: &[Fields<F, E>]) -> Self;
+    fn partial_evaluate(&self, point: &[Fields<Self::Field, Self::Extension>]) -> Self;
     /// Returns the max variable degree
     fn max_degree(&self) -> usize;
     /// Returns the sum of evaluations over the boolean hypercube
-    fn sum_over_hypercube(&self) -> Fields<F, E>;
+    fn sum_over_hypercube(&self) -> Fields<Self::Field, Self::Extension>;
     /// Returns the number of variables of the polynomial
     fn num_vars(&self) -> usize;
     /// Commit structure to transcript
-    fn commit_to_transcript(&self, transcript: &mut transcript::Transcript<F, E>)
-    where
-        F: PrimeField32;
+    fn commit_to_transcript(
+        &self,
+        transcript: &mut transcript::Transcript<Self::Field, Self::Extension>,
+    ) where
+        Self::Field: PrimeField32;
 }
 
 #[cfg(test)]
