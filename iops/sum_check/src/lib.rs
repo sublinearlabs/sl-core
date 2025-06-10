@@ -23,7 +23,12 @@ impl Sumcheck {
         claimed_sum: S::Item,
         transcript: &mut S::Transcript,
     ) -> Result<SumcheckProof<S::Item>, anyhow::Error> {
-        todo!()
+        // append public input to the transcript
+        structure.commit(transcript);
+        // TODO: fix transcript
+        //transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
+
+        Ok(Self::prove_partial(structure, claimed_sum, transcript)?.0)
     }
 
     fn prove_partial<S: Sumcheckable>(
@@ -31,6 +36,13 @@ impl Sumcheck {
         claimed_sum: S::Item,
         transcript: &mut S::Transcript,
     ) -> Result<(SumcheckProof<S::Item>, Vec<S::Item>), anyhow::Error> {
+        let mut round_polynomials = Vec::with_capacity(structure.no_of_rounds());
+        let mut challenges = vec![];
+
+        for _ in 0..structure.no_of_rounds() {
+            let round_message = structure.round_message();
+            //transcript.observe_ext_element(&round_message.iter().map(|val| val.to_extension ))
+        }
         todo!()
     }
 
