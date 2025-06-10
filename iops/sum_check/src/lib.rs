@@ -1,5 +1,4 @@
 //! This module contains the implementation of the sum check protocol.
-
 use sumcheckable::Sumcheckable;
 //pub mod interface;
 //pub mod primitives;
@@ -63,7 +62,14 @@ impl Sumcheck {
         proof: SumcheckProof<S::Item>,
         transcript: &mut S::Transcript,
     ) -> Result<bool, anyhow::Error> {
-        todo!()
+        // append public input to the transcript
+        structure.commit(transcript);
+        S::commit_items(&[proof.claimed_sum.clone()], transcript);
+
+        let subclaim = Self::verify_partial::<S>(proof, transcript)?;
+
+        // oracle check
+        Ok(subclaim.claimed_sum == structure.eval(subclaim.challenges.as_slice()))
     }
 
     fn verify_partial<S: Sumcheckable>(

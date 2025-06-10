@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use p3_field::{AbstractField, PrimeField32};
 use poly::{Fields, MultilinearExtension};
 use transcript::Transcript;
@@ -6,7 +8,7 @@ pub trait Sumcheckable {
     /// Assumes we are running sumcheck over a structure that outputs
     /// uniformed type elements also process same type.
     /// Item represents that type for the given structure.
-    type Item: Clone;
+    type Item: Clone + PartialEq;
     /// Transcript type to allow for structure commitment
     type Transcript;
 
