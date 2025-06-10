@@ -75,6 +75,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "circuits"
+version = "0.1.0"
+dependencies = [
+ "p3-field 0.2.0",
+ "p3-goldilocks 0.2.0",
+ "poly",
+ "rand",
+]
+
+[[package]]
 name = "clap"
 version = "4.5.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
