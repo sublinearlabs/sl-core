@@ -36,13 +36,13 @@ impl Sumcheck {
         claimed_sum: S::Item,
         transcript: &mut S::Transcript,
     ) -> Result<(SumcheckProof<S::Item>, Vec<S::Item>), anyhow::Error> {
-        let mut round_polynomials = Vec::with_capacity(structure.no_of_rounds());
-        let mut challenges = vec![];
-
-        for _ in 0..structure.no_of_rounds() {
-            let round_message = structure.round_message();
-            //transcript.observe_ext_element(&round_message.iter().map(|val| val.to_extension ))
-        }
+        //let mut round_polynomials = Vec::with_capacity(structure.no_of_rounds());
+        //let mut challenges = vec![];
+        //
+        //for _ in 0..structure.no_of_rounds() {
+        //    let round_message = structure.round_message();
+        //    //transcript.observe_ext_element(&round_message.iter().map(|val| val.to_extension ))
+        //}
         todo!()
     }
 

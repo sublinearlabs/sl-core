@@ -22,8 +22,11 @@ pub trait Sumcheckable {
     /// Eval structure at some given point. Needed for the `oracle check`
     fn eval(&self, point: &[Self::Item]) -> Self::Item;
 
-    /// commit state to some transacript
+    /// commit structure state to some transacript
     fn commit(&self, transcript: &mut Self::Transcript);
+
+    /// commit array of items
+    fn commit_items(&self, items: &[Self::Item], transcript: &mut Self::Transcript);
 }
 
 impl<T: MultilinearExtension> Sumcheckable for T
@@ -54,5 +57,14 @@ where
 
     fn commit(&self, transcript: &mut Self::Transcript) {
         self.commit_to_transcript(transcript);
+    }
+
+    fn commit_items(&self, items: &[Self::Item], transcript: &mut Self::Transcript) {
+        transcript.observe_ext_element(
+            &items
+                .iter()
+                .map(|t| t.to_extension_field())
+                .collect::<Vec<_>>(),
+        )
     }
 }
