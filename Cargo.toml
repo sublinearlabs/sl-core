@@ -1,9 +1,10 @@
 [workspace]
 members = [
-  "transcript",
+  # "transcript",
   "poly",
-  "iops/sum_check",
-  "circuits"]
+  # "iops/sum_check",
+  # "circuits"]
+]
 
 resolver = "2"
 
