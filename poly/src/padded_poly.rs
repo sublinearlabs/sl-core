@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::MultilinearExtension;
+use crate::{Fields, MultilinearExtension};
 use p3_field::{ExtensionField, Field};
 
 // TODO: add documentation
@@ -9,21 +9,44 @@ enum BasePoly<E, T> {
     MLE(T),
 }
 
+// brief thoughts on generics
+// you are stating that you can parametize a structure with different types
+// the compiler will then see all the invocation points and then help you
+// duplicate your implementation based on those types
+// hence generics are useful when you want the same piece of code to work
+// with different types but want just one implementation
+// and all of this happens at compile time
+// you can also help the compiler perform some checks on the types
+// i.e restrict the types that can make use of this code via trait bounds
+// all types that can use this code must have implemented x, y, z
+// bounds placed on a struct generic meaning if that struct is used as a field type
+// for another struct, that bigger struct also has to enforce those bounds
+// you cannot put everything into something only something into something
+// but you can put something into everything
+//
+//
+// an analysis on the truth of these things
+// how can we make sense of it generically???
+// it should hold a structure for sure then add padding to that structure
+// what should be the type of this structure that it holds????
+
 impl<E, T> BasePoly<E, T> {
-    fn num_vars<F>(&self) -> usize
-    where
-        F: Field,
-        E: ExtensionField<F>,
-        T: MultilinearExtension<F, E>,
-    {
+    // TODO: add documentation
+    fn as_mle(&self) -> Option<&T> {
         match self {
-            Self::Eval(_) => 0,
-            Self::MLE(poly) => poly.num_vars(),
+            Self::Eval(_) => None,
+            Self::MLE(p) => Some(p),
         }
+    }
+
+    fn num_vars(&self) -> usize {
+        todo!()
+        //self.as_mle().map(|p| p.num_vars()).unwrap_or(0)
     }
 }
 
 // TODO: add documentation
+// make reference to front loaded assignment
 pub struct PaddedPoly<F, E, T> {
     base_poly: BasePoly<E, T>,
     pad_count: usize,
@@ -53,10 +76,13 @@ where
         self.base_poly.num_vars() + self.pad_count
     }
 
-    //fn eval(&self, points: &[Fields<F, E>]) -> Fields<F, E> {
-    //    assert_eq!(self.num_vars)
-    //
-    //}
+    fn eval(&self, points: &[Fields<F, E>]) -> Fields<F, E> {
+        assert_eq!(self.num_vars(), points.len());
+        // pull the amount needed then eval poly
+        // mul that with the prod of the remaining, return that
+
+        todo!()
+    }
 }
 
 // how do I test this??
