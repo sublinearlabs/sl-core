@@ -30,8 +30,8 @@ impl<F: Field, E: ExtensionField<F>> MultilinearPoly<F, E> {
 }
 
 impl<F: Field, E: ExtensionField<F>> MultilinearExtension for MultilinearPoly<F, E> {
-    type Field = F;
-    type Extension = E;
+    type F = F;
+    type E = E;
 
     /// Partially fixes variables in the `MultilinearPoly`
     /// Returns a new `MultilinearPoly` after fixed variables have
@@ -214,8 +214,8 @@ impl<F: Field, E: ExtensionField<F>> Mul<Fields<F, E>> for MultilinearPoly<F, E>
 #[cfg(test)]
 mod tests {
     use super::MultilinearPoly;
-    use crate::{mle::Fields, MultilinearExtension};
-    use p3_field::{extension::BinomialExtensionField, AbstractField};
+    use crate::{MultilinearExtension, mle::Fields};
+    use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;

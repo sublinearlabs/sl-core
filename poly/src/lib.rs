@@ -133,34 +133,29 @@ impl<F: Field, E: ExtensionField<F>> AddAssign for Fields<F, E> {
 /// Multilinear Extension Trait
 pub trait MultilinearExtension {
     /// Associated type for Field
-    type Field: Field;
+    type F: Field;
     /// Associated type for Field Extension
-    type Extension: ExtensionField<Self::Field>;
+    type E: ExtensionField<Self::F>;
 
     /// Fix all variables
-    fn evaluate(
-        &self,
-        point: &[Fields<Self::Field, Self::Extension>],
-    ) -> Fields<Self::Field, Self::Extension>;
+    fn evaluate(&self, point: &[Fields<Self::F, Self::E>]) -> Fields<Self::F, Self::E>;
     /// Partially fix variables starting from the first
-    fn partial_evaluate(&self, point: &[Fields<Self::Field, Self::Extension>]) -> Self;
+    fn partial_evaluate(&self, point: &[Fields<Self::F, Self::E>]) -> Self;
     /// Returns the max variable degree
     fn max_degree(&self) -> usize;
     /// Returns the sum of evaluations over the boolean hypercube
-    fn sum_over_hypercube(&self) -> Fields<Self::Field, Self::Extension>;
+    fn sum_over_hypercube(&self) -> Fields<Self::F, Self::E>;
     /// Returns the number of variables of the polynomial
     fn num_vars(&self) -> usize;
     /// Commit structure to transcript
-    fn commit_to_transcript(
-        &self,
-        transcript: &mut transcript::Transcript<Self::Field, Self::Extension>,
-    ) where
-        Self::Field: PrimeField32;
+    fn commit_to_transcript(&self, transcript: &mut transcript::Transcript<Self::F, Self::E>)
+    where
+        Self::F: PrimeField32;
 }
 
 #[cfg(test)]
 mod tests {
-    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
+    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
 
     use p3_mersenne_31::Mersenne31;
 

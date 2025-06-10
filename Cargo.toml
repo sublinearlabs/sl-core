@@ -2,7 +2,7 @@
 members = [
   "transcript",
   "poly",
-  # "iops/sum_check",
+  "iops/sum_check",
   "circuits"
 ]
 
