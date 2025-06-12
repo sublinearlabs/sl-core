@@ -3,7 +3,6 @@ use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 use p3_field::{ExtensionField, Field, PrimeField32};
 
 pub mod mle;
-pub mod padded_poly;
 pub mod utils;
 pub mod vpoly;
 
