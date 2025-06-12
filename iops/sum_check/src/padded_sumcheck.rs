@@ -5,6 +5,7 @@ use p3_field::{ExtensionField, Field, PrimeField32};
 
 struct PaddedSumcheck<F, E, S> {
     inner: S,
+    eval: Option<E>,
     n: usize,
     pad_count: usize,
     curr_round: usize,
@@ -17,7 +18,8 @@ impl<F: Field, E: ExtensionField<F>, S: Sumcheckable<F, E>> PaddedSumcheck<F, E,
             n: inner.no_of_rounds(),
             pad_count,
             inner,
-            curr_round: 0,
+            curr_round: 1,
+            eval: None,
             _marker: PhantomData,
         }
     }
@@ -28,6 +30,10 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
 {
     fn no_of_rounds(&self) -> usize {
         self.inner.no_of_rounds() + self.pad_count
+    }
+
+    fn max_var_degree(&self) -> usize {
+        self.inner.max_var_degree()
     }
 
     fn eval(&self, point: &[poly::Fields<F, E>]) -> poly::Fields<F, E> {
@@ -44,6 +50,8 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
     }
 
     fn receive_challenge(&mut self, challenge: &poly::Fields<F, E>) {
+        // what happens when we receive a challenge??
+        // if we receive the challenge
         todo!()
     }
 
