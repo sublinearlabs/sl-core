@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use crate::Fields;
 use crate::sumcheckable::Sumcheckable;
 use p3_field::{ExtensionField, Field, PrimeField32};
 
@@ -36,23 +37,31 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
         self.inner.max_var_degree()
     }
 
-    fn eval(&self, point: &[poly::Fields<F, E>]) -> poly::Fields<F, E> {
+    fn eval(&self, point: &[Fields<F, E>]) -> Fields<F, E> {
         assert!(point.len() == self.no_of_rounds());
         self.inner.eval(&point[..self.inner.no_of_rounds()])
             * point[self.inner.no_of_rounds()..].iter().cloned().product()
     }
 
-    fn round_message(&self) -> Vec<poly::Fields<F, E>> {
-        // how do we track??
-        // also how do we know when it is enough
-        // tbh we need to track more things
-        todo!()
+    fn round_message(&self) -> Vec<Fields<F, E>> {
+        if self.curr_round <= self.n {
+            self.inner.round_message()
+        } else {
+            (0..self.max_var_degree())
+                .map(|i| Fields::Extension(E::from_canonical_usize(i) * self.eval.unwrap()))
+                .collect()
+        }
     }
 
-    fn receive_challenge(&mut self, challenge: &poly::Fields<F, E>) {
-        // what happens when we receive a challenge??
-        // if we receive the challenge
-        todo!()
+    fn receive_challenge(&mut self, challenge: &Fields<F, E>) {
+        if self.curr_round < self.n {
+            self.inner.receive_challenge(challenge);
+        } else if self.curr_round == self.n {
+            let claimed_sum = self.inner.eval(&[*challenge]);
+            self.eval = Some(claimed_sum.to_extension_field());
+        } else {
+            self.eval = Some(self.eval.unwrap() * challenge.to_extension_field());
+        }
     }
 
     fn commit(&self, transcript: &mut transcript::Transcript<F, E>) {
