@@ -1,5 +1,6 @@
 //! This module contains the implementation of the sum check protocol.
 pub mod interface;
+pub mod padded_sumcheck;
 pub mod primitives;
 pub mod sumcheckable;
 
