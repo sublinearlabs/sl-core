@@ -1,13 +1,30 @@
-use crate::sumcheckable::Sumcheckable;
-use p3_field::{ExtensionField, Field};
+use std::marker::PhantomData;
 
-struct PaddedSumcheck<S> {
+use crate::sumcheckable::Sumcheckable;
+use p3_field::{ExtensionField, Field, PrimeField32};
+
+struct PaddedSumcheck<F, E, S> {
     inner: S,
+    n: usize,
     pad_count: usize,
+    curr_round: usize,
+    _marker: PhantomData<(F, E)>,
 }
 
-impl<F: Field, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumcheckable<F, E>
-    for PaddedSumcheck<S>
+impl<F: Field, E: ExtensionField<F>, S: Sumcheckable<F, E>> PaddedSumcheck<F, E, S> {
+    fn new(inner: S, pad_count: usize) -> Self {
+        Self {
+            n: inner.no_of_rounds(),
+            pad_count,
+            inner,
+            curr_round: 0,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumcheckable<F, E>
+    for PaddedSumcheck<F, E, S>
 {
     fn no_of_rounds(&self) -> usize {
         self.inner.no_of_rounds() + self.pad_count
@@ -20,6 +37,9 @@ impl<F: Field, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumcheckable<F, E>
     }
 
     fn round_message(&self) -> Vec<poly::Fields<F, E>> {
+        // how do we track??
+        // also how do we know when it is enough
+        // tbh we need to track more things
         todo!()
     }
 
@@ -28,6 +48,9 @@ impl<F: Field, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumcheckable<F, E>
     }
 
     fn commit(&self, transcript: &mut transcript::Transcript<F, E>) {
-        todo!()
+        // commit the inner structure
+        self.inner.commit(transcript);
+        // commit the pad count
+        transcript.observe_ext_element(&[E::from_canonical_usize(self.pad_count)])
     }
 }
