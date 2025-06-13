@@ -1,8 +1,10 @@
+use std::rc::Rc;
+
 use p3_field::{ExtensionField, Field};
 
-use crate::Fields;
+use crate::{mle::MultilinearPoly, vpoly::VPoly, Fields, MultilinearExtension};
 
-// Evaluate a univariate polynomial in evaluation form
+/// Evaluate a univariate polynomial in evaluation form
 pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
     evaluations: &[Fields<F, E>],
     evaluation_point: &Fields<F, E>,
@@ -32,10 +34,24 @@ pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
     Fields::Extension(m_x * res)
 }
 
+/// Helper function to build a Vpoly that combines via product
+pub fn product_poly<F: Field, E: ExtensionField<F>>(
+    mles: Vec<MultilinearPoly<F, E>>,
+) -> VPoly<F, E> {
+    let max_degree = mles.len();
+    let num_vars = mles[0].num_vars();
+    VPoly::new(
+        mles,
+        max_degree,
+        num_vars,
+        Rc::new(|values: &[Fields<F, E>]| values.iter().cloned().product()),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
     use p3_mersenne_31::Mersenne31;
 
     #[test]
