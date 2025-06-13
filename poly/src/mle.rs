@@ -211,8 +211,8 @@ impl<F: Field, E: ExtensionField<F>> Mul<Fields<F, E>> for MultilinearPoly<F, E>
 #[cfg(test)]
 mod tests {
     use super::MultilinearPoly;
-    use crate::{MultilinearExtension, mle::Fields};
-    use p3_field::{AbstractField, extension::BinomialExtensionField};
+    use crate::{mle::Fields, MultilinearExtension};
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;

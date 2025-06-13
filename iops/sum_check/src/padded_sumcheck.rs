@@ -4,6 +4,7 @@ use crate::sumcheckable::Sumcheckable;
 use crate::Fields;
 use p3_field::{ExtensionField, Field, PrimeField32};
 
+#[derive(Clone)]
 struct PaddedSumcheck<F, E, S> {
     inner: S,
     eval: Option<E>,
@@ -47,7 +48,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
         if self.curr_round <= self.n {
             self.inner.round_message()
         } else {
-            (0..self.max_var_degree())
+            (0..=self.max_var_degree() + 1)
                 .map(|i| Fields::Extension(E::from_canonical_usize(i) * self.eval.unwrap()))
                 .collect()
         }
@@ -62,6 +63,8 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
         } else {
             self.eval = Some(self.eval.unwrap() * challenge.to_extension_field());
         }
+
+        self.curr_round += 1;
     }
 
     fn commit(&self, transcript: &mut transcript::Transcript<F, E>) {
@@ -74,13 +77,19 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
 
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_mersenne_31::Mersenne31 as F;
     type E = BinomialExtensionField<F, 3>;
 
-    use poly::{mle::MultilinearPoly, Fields};
+    use poly::vpoly::VPoly;
+    use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
+    use transcript::Transcript;
 
     use crate::sumcheckable::Sumcheckable;
+    use crate::SumCheck;
+    use crate::SumCheckInterface;
 
     use super::PaddedSumcheck;
 
@@ -93,6 +102,10 @@ mod tests {
     fn f_abc() -> MultilinearPoly<F, E> {
         // f(a, b, c) = 2ab + 3bc
         MultilinearPoly::new_from_vec(3, to_fields(vec![0, 0, 0, 3, 0, 0, 2, 5]))
+    }
+
+    fn prod_combined_fn(values: &[Fields<F, E>]) -> Fields<F, E> {
+        Fields::Extension(values[0].to_extension_field() * values[1].to_extension_field())
     }
 
     #[test]
@@ -115,5 +128,51 @@ mod tests {
             padded_poly.eval(&to_fields(vec![3, 4, 2, 3, 4])),
             Fields::Extension(E::from_canonical_u64(576))
         )
+    }
+
+    #[test]
+    fn test_multilinear_poly_padded_sumcheck() {
+        let poly = f_abc();
+
+        let claimed_sum = poly.sum_over_hypercube();
+        let padded_poly = PaddedSumcheck::new(poly, 4);
+        assert_eq!(padded_poly.no_of_rounds(), 7);
+
+        let mut prover_transcript = Transcript::init();
+        let proof =
+            SumCheck::prove(claimed_sum, padded_poly.clone(), &mut prover_transcript).unwrap();
+
+        let mut verify_transcript = Transcript::init();
+        let verification_result = SumCheck::verify(&padded_poly, &proof, &mut verify_transcript);
+
+        assert!(verification_result.unwrap());
+    }
+
+    #[test]
+    fn test_v_poly_padded_sumcheck() {
+        // g(a, b, c) = f(a, b, c) * f(a, b, c)
+        let poly = VPoly::new(vec![f_abc(), f_abc()], 2, 3, Rc::new(prod_combined_fn));
+        // f(a, b, c) = 2ab + 3bc
+        // f(1, 2, 3) = 2(1)(2) + 3(2)(3) = 4 + 18 = 22
+        assert_eq!(
+            poly.eval(&to_fields(vec![1, 2, 3])),
+            Fields::Extension(E::from_canonical_u64(484))
+        );
+
+        let claimed_sum = poly.sum_over_hypercube();
+        let padded_poly = PaddedSumcheck::new(poly, 10);
+        assert_eq!(padded_poly.no_of_rounds(), 13);
+
+        let mut prover_transcript = Transcript::init();
+        let proof =
+            SumCheck::prove(claimed_sum, padded_poly.clone(), &mut prover_transcript).unwrap();
+
+        // ensure that round poly takes into account the variable degree
+        assert_eq!(proof.round_polynomials[0].len(), 3);
+
+        let mut verify_transcript = Transcript::init();
+        let verification_result = SumCheck::verify(&padded_poly, &proof, &mut verify_transcript);
+
+        assert!(verification_result.unwrap());
     }
 }
