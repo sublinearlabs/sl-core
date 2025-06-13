@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
-use crate::Fields;
 use crate::sumcheckable::Sumcheckable;
+use crate::Fields;
 use p3_field::{ExtensionField, Field, PrimeField32};
 
 #[derive(Clone)]
-struct PaddedSumcheck<F, E, S> {
+pub struct PaddedSumcheck<F, E, S> {
     inner: S,
     eval: Option<E>,
     n: usize,
@@ -15,7 +15,7 @@ struct PaddedSumcheck<F, E, S> {
 }
 
 impl<F: Field, E: ExtensionField<F>, S: Sumcheckable<F, E>> PaddedSumcheck<F, E, S> {
-    fn new(inner: S, pad_count: usize) -> Self {
+    pub fn new(inner: S, pad_count: usize) -> Self {
         Self {
             n: inner.no_of_rounds(),
             pad_count,
@@ -79,17 +79,17 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
 mod tests {
     use std::rc::Rc;
 
-    use p3_field::{AbstractField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_mersenne_31::Mersenne31 as F;
     type E = BinomialExtensionField<F, 3>;
 
     use poly::vpoly::VPoly;
-    use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
+    use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
     use transcript::Transcript;
 
+    use crate::sumcheckable::Sumcheckable;
     use crate::SumCheck;
     use crate::SumCheckInterface;
-    use crate::sumcheckable::Sumcheckable;
 
     use super::PaddedSumcheck;
 
