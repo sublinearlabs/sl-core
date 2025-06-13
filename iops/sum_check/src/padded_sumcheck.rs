@@ -8,6 +8,7 @@ use p3_field::{ExtensionField, Field, PrimeField32};
 /// Pads a polynomial with extra variables in the following form
 /// f(a, b, c) with pad_count = 2 will give
 /// f'(a, b, c, d, e) = d * e * f(a, b, c)
+/// see: https://hackmd.io/@iammadab/BJJiocNfel
 pub struct PaddedSumcheck<F, E, S> {
     inner: S,
     eval: Option<E>,
