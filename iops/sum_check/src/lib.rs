@@ -7,12 +7,11 @@ pub mod sumcheckable;
 use crate::sumcheckable::Sumcheckable;
 use interface::SumCheckInterface;
 use p3_field::{ExtensionField, Field, PrimeField32};
-use poly::{Fields, utils::barycentric_evaluation};
+use poly::{utils::barycentric_evaluation, Fields};
 use primitives::SumCheckProof;
 use std::marker::PhantomData;
 use transcript::Transcript;
 
-// TODO: consider cleaning up this file
 pub struct SumCheck<F: Field, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clone> {
     _marker: PhantomData<(F, E, T)>,
 }
@@ -126,7 +125,7 @@ mod tests {
     use crate::{SumCheck, SumCheckInterface};
     use p3_field::extension::BinomialExtensionField;
     use p3_mersenne_31::Mersenne31;
-    use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
+    use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
     use transcript::Transcript;
 
     type F = Mersenne31;
