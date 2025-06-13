@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::Fields;
 use crate::sumcheckable::Sumcheckable;
+use crate::Fields;
 use p3_field::{ExtensionField, Field, PrimeField32};
 
 struct PaddedSumcheck<F, E, S> {
@@ -69,5 +69,51 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
         self.inner.commit(transcript);
         // commit the pad count
         transcript.observe_ext_element(&[E::from_canonical_usize(self.pad_count)])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
+    use p3_mersenne_31::Mersenne31 as F;
+    type E = BinomialExtensionField<F, 3>;
+
+    use poly::{mle::MultilinearPoly, Fields};
+
+    use crate::sumcheckable::Sumcheckable;
+
+    use super::PaddedSumcheck;
+
+    fn to_fields(vals: Vec<u64>) -> Vec<Fields<F, E>> {
+        vals.into_iter()
+            .map(|v| Fields::<F, E>::Base(F::from_canonical_u64(v)))
+            .collect()
+    }
+
+    fn f_abc() -> MultilinearPoly<F, E> {
+        // f(a, b, c) = 2ab + 3bc
+        MultilinearPoly::new_from_vec(3, to_fields(vec![0, 0, 0, 3, 0, 0, 2, 5]))
+    }
+
+    #[test]
+    fn test_padded_sumcheck_eval() {
+        let poly = f_abc();
+        let padded_poly = PaddedSumcheck::new(poly, 2);
+        assert_eq!(padded_poly.no_of_rounds(), 5);
+        // TODO: why does the evaluation return an extension field when all
+        //  the inputs are base field elements
+        assert_eq!(
+            padded_poly.eval(&to_fields(vec![4, 3, 2, 5, 0])),
+            Fields::Extension(E::zero())
+        );
+
+        assert_eq!(
+            // a = 3, b = 4, c = 2
+            // (2ab + 3bc) * d * e
+            // (2 * 3 * 4 + 3 * 4 * 2) * 3 * 4
+            // (24 + 24) * 12 = 48 * 12 = 576
+            padded_poly.eval(&to_fields(vec![3, 4, 2, 3, 4])),
+            Fields::Extension(E::from_canonical_u64(576))
+        )
     }
 }
