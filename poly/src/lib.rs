@@ -1,4 +1,7 @@
-use std::ops::{Add, AddAssign, Mul, Neg, Sub};
+use std::{
+    iter::Product,
+    ops::{Add, AddAssign, Mul, Neg, Sub},
+};
 
 use p3_field::{ExtensionField, Field, PrimeField32};
 
@@ -127,6 +130,20 @@ impl<F: Field, E: ExtensionField<F>> AddAssign for Fields<F, E> {
                 }
             },
         }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> Product for Fields<F, E> {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        // Initialize with the multiplicative identity (1) as the base field
+        let mut result = Fields::Base(F::one());
+
+        // Iterate over the items and accumulate the product
+        for item in iter {
+            result = result * item;
+        }
+
+        result
     }
 }
 
