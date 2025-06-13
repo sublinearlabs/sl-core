@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::sumcheckable::Sumcheckable;
 use crate::Fields;
+use crate::sumcheckable::Sumcheckable;
 use p3_field::{ExtensionField, Field, PrimeField32};
 
 #[derive(Clone)]
@@ -79,17 +79,17 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
 mod tests {
     use std::rc::Rc;
 
-    use p3_field::{extension::BinomialExtensionField, AbstractField};
+    use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_mersenne_31::Mersenne31 as F;
     type E = BinomialExtensionField<F, 3>;
 
     use poly::vpoly::VPoly;
-    use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
+    use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
     use transcript::Transcript;
 
-    use crate::sumcheckable::Sumcheckable;
     use crate::SumCheck;
     use crate::SumCheckInterface;
+    use crate::sumcheckable::Sumcheckable;
 
     use super::PaddedSumcheck;
 
