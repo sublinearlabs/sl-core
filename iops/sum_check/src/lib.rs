@@ -22,7 +22,6 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
     type Polynomial = T;
     type Transcript = Transcript<F, E>;
     type Proof = SumCheckProof<F, E>;
-    type PartialProof = (Vec<Vec<Fields<F, E>>>, Vec<E>);
 
     fn prove(
         claimed_sum: Fields<F, E>,
@@ -35,11 +34,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
         // Append claimed sum to transcript
         transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
 
-        // Generate round polynomials
-        let (round_polynomials, _) =
-            SumCheck::<F, E, T>::prove_partial(&mut polynomial, transcript).unwrap();
-
-        Ok(Self::Proof::new(claimed_sum, round_polynomials))
+        SumCheck::<F, E, T>::prove_partial(claimed_sum, &mut polynomial, transcript)
     }
 
     fn verify(
@@ -66,9 +61,10 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
     }
 
     fn prove_partial(
+        claimed_sum: Fields<F, E>,
         polynomial: &mut Self::Polynomial,
         transcript: &mut Self::Transcript,
-    ) -> Result<(Vec<Vec<Fields<F, E>>>, Vec<E>), anyhow::Error> {
+    ) -> Result<Self::Proof, anyhow::Error> {
         // Init round polynomials struct
         let mut round_polynomials = Vec::with_capacity(polynomial.no_of_rounds());
 
@@ -82,13 +78,17 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
                     .map(|val| val.to_extension_field())
                     .collect::<Vec<E>>(),
             );
-            let challenge = transcript.sample_challenge();
-            polynomial.receive_challenge(&Fields::Extension(challenge));
+            let challenge = Fields::Extension(transcript.sample_challenge());
+            polynomial.receive_challenge(&challenge);
             round_polynomials.push(round_message);
             challenges.push(challenge);
         }
 
-        Ok((round_polynomials, challenges))
+        Ok(SumCheckProof::new(
+            claimed_sum,
+            round_polynomials,
+            challenges,
+        ))
     }
 
     fn verify_partial(
