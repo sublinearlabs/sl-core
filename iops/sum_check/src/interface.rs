@@ -7,7 +7,6 @@ pub trait SumCheckInterface<F: Field, E: ExtensionField<F>> {
     type Polynomial;
     type Transcript;
     type Proof;
-    type PartialProof;
 
     /// Generate proof for a polynomial sum over the bolean hypercube
     fn prove(
@@ -26,9 +25,10 @@ pub trait SumCheckInterface<F: Field, E: ExtensionField<F>> {
     // Generates sumcheck proof for a polynomial without commiting to the initial polynomial
     // For use in GKR
     fn prove_partial(
+        claimed_sum: Fields<F, E>,
         polynomial: &mut Self::Polynomial,
         transcript: &mut Self::Transcript,
-    ) -> Result<Self::PartialProof, anyhow::Error>;
+    ) -> Result<Self::Proof, anyhow::Error>;
 
     // Partially verifies a sumcheck proof without knowing the initial polynomial
     // For use in GKR
