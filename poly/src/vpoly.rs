@@ -140,15 +140,13 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for VPoly<F, E> 
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::product_poly;
+
     use super::*;
     use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;
-
-    fn prod_combined_fn(values: &[Fields<F, E>]) -> Fields<F, E> {
-        Fields::Extension(values[0].to_extension_field() * values[1].to_extension_field())
-    }
 
     fn combined_fn_1(values: &[Fields<F, E>]) -> Fields<F, E> {
         Fields::Extension(
@@ -181,7 +179,7 @@ mod tests {
                 .collect(),
         );
         let mles = vec![f_ab, f_abc()];
-        let vpoly = VPoly::new(mles, 1, 3, Rc::new(prod_combined_fn));
+        let vpoly = product_poly(mles);
         let point = vec![
             Fields::Base(F::from_canonical_u64(1)),
             Fields::Base(F::from_canonical_u64(2)),
@@ -192,17 +190,17 @@ mod tests {
     #[test]
     fn test_meta_data_test() {
         let mles = vec![f_abc(), f_abc()];
-        let vpoly = VPoly::new(mles, 1, 3, Rc::new(prod_combined_fn));
+        let vpoly = product_poly(mles);
 
         assert_eq!(vpoly.num_vars(), 3);
-        assert_eq!(vpoly.max_degree(), 1);
+        assert_eq!(vpoly.max_degree(), 2);
         assert_eq!(vpoly.num_mles(), 2);
     }
 
     #[test]
     fn test_partial_evaluation() {
         let mles = vec![f_abc(), f_abc()];
-        let vpoly = VPoly::new(mles, 1, 3, Rc::new(prod_combined_fn));
+        let vpoly = product_poly(mles);
 
         let point = vec![Fields::Base(F::from_canonical_u64(4))];
         let expected_mles = vec![
@@ -227,7 +225,7 @@ mod tests {
     #[test]
     fn test_eval() {
         let mles = vec![f_abc(), f_abc()];
-        let vpoly = VPoly::new(mles, 2, 3, Rc::new(prod_combined_fn)); // combination => (a * b)
+        let vpoly = product_poly(mles);
         let points = vec![
             Fields::Base(F::from_canonical_u64(1)),
             Fields::Base(F::from_canonical_u64(2)),
