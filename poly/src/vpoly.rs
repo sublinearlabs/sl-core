@@ -39,10 +39,10 @@ impl<F: Field, E: ExtensionField<F>> VPoly<F, E> {
     pub fn new(
         mles: Vec<MultilinearPoly<F, E>>,
         max_degree: usize,
-        num_vars: usize,
         combine_fn: CombineFn<F, E>,
     ) -> Self {
         // assert all MLEs have the same number of variables
+        let num_vars = mles[0].num_vars();
         assert!(
             mles.iter().all(|mle| mle.num_vars() == num_vars),
             "MLEs must have the same number of variables"
