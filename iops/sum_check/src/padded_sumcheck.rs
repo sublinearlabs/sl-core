@@ -155,9 +155,10 @@ mod tests {
     #[test]
     fn test_v_poly_padded_sumcheck() {
         // g(a, b, c) = f(a, b, c) * f(a, b, c)
-        let poly = VPoly::new(vec![f_abc(), f_abc()], 2, 3, Rc::new(prod_combined_fn));
+        let poly = VPoly::new(vec![f_abc(), f_abc()], 2, Rc::new(prod_combined_fn));
         // f(a, b, c) = 2ab + 3bc
         // f(1, 2, 3) = 2(1)(2) + 3(2)(3) = 4 + 18 = 22
+        assert_eq!(poly.num_vars(), 3);
         assert_eq!(
             poly.eval(&to_fields(vec![1, 2, 3])),
             Fields::Extension(E::from_canonical_u64(484))
