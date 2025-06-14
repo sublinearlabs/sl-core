@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use p3_field::{ExtensionField, Field};
 
-use crate::{Fields, MultilinearExtension, mle::MultilinearPoly, vpoly::VPoly};
+use crate::{Fields, mle::MultilinearPoly, vpoly::VPoly};
 
 /// Evaluate a univariate polynomial in evaluation form
 pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
@@ -39,11 +39,9 @@ pub fn product_poly<F: Field, E: ExtensionField<F>>(
     mles: Vec<MultilinearPoly<F, E>>,
 ) -> VPoly<F, E> {
     let max_degree = mles.len();
-    let num_vars = mles[0].num_vars();
     VPoly::new(
         mles,
         max_degree,
-        num_vars,
         Rc::new(|values: &[Fields<F, E>]| values.iter().cloned().product()),
     )
 }
