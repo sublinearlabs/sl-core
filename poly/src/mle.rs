@@ -224,8 +224,8 @@ impl<F: Field, E: ExtensionField<F>> Mul<Fields<F, E>> for MultilinearPoly<F, E>
 #[cfg(test)]
 mod tests {
     use super::MultilinearPoly;
-    use crate::{mle::Fields, MultilinearExtension};
-    use p3_field::{extension::BinomialExtensionField, AbstractField};
+    use crate::{MultilinearExtension, mle::Fields};
+    use p3_field::{AbstractField, extension::BinomialExtensionField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;
@@ -243,6 +243,31 @@ mod tests {
     #[test]
     fn test_mle_from_vec() {
         let _ = f_abc();
+    }
+
+    #[test]
+    fn test_new_mle_from_non_power_of_two() {
+        let mle = MultilinearPoly::new_extend_to_power_of_two(
+            vec![0, 0, 0, 3, 0, 0, 2, 5]
+                .into_iter()
+                .map(|val| Fields::Base(F::from_canonical_u64(val)))
+                .collect::<Vec<Fields<F, E>>>(),
+            Fields::Base(F::zero()),
+        );
+        assert_eq!(mle.num_vars(), 3);
+
+        // remove two elements
+        let mle = MultilinearPoly::new_extend_to_power_of_two(
+            vec![0, 0, 0, 3, 0, 0]
+                .into_iter()
+                .map(|val| Fields::Base(F::from_canonical_u64(val)))
+                .collect::<Vec<Fields<F, E>>>(),
+            Fields::Base(F::zero()),
+        );
+        assert_eq!(mle.num_vars(), 3);
+        assert_eq!(mle.evaluations.len(), 8);
+        assert_eq!(mle.evaluations[6], Fields::Base(F::from_canonical_u64(0)));
+        assert_eq!(mle.evaluations[7], Fields::Base(F::from_canonical_u64(0)));
     }
 
     #[test]
