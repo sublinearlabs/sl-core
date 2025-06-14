@@ -23,6 +23,19 @@ impl<F: Field, E: ExtensionField<F>> MultilinearPoly<F, E> {
         }
     }
 
+    /// Instantiates a new `MultilinearPoly` pads with some given element until a power of two size
+    pub fn new_extend_to_power_of_two(
+        mut evaluations: Vec<Fields<F, E>>,
+        pad_element: Fields<F, E>,
+    ) -> Self {
+        let target_size = evaluations.len().next_power_of_two();
+        evaluations.resize(target_size, pad_element);
+        Self {
+            evaluations,
+            n_vars: target_size.ilog2() as usize,
+        }
+    }
+
     /// Creates a Zero Multilinear poly
     pub fn zero(num_vars: usize) -> Self {
         Self::new_from_vec(num_vars, vec![Fields::Base(F::zero()); 1 << num_vars])
@@ -211,8 +224,8 @@ impl<F: Field, E: ExtensionField<F>> Mul<Fields<F, E>> for MultilinearPoly<F, E>
 #[cfg(test)]
 mod tests {
     use super::MultilinearPoly;
-    use crate::{MultilinearExtension, mle::Fields};
-    use p3_field::{AbstractField, extension::BinomialExtensionField};
+    use crate::{mle::Fields, MultilinearExtension};
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;
