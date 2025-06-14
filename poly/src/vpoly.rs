@@ -39,10 +39,10 @@ impl<F: Field, E: ExtensionField<F>> VPoly<F, E> {
     pub fn new(
         mles: Vec<MultilinearPoly<F, E>>,
         max_degree: usize,
-        num_vars: usize,
         combine_fn: CombineFn<F, E>,
     ) -> Self {
         // assert all MLEs have the same number of variables
+        let num_vars = mles[0].num_vars();
         assert!(
             mles.iter().all(|mle| mle.num_vars() == num_vars),
             "MLEs must have the same number of variables"
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn test_eval_1() {
         let mles = vec![f_abc(), f_abc(), f_abc()];
-        let vpoly = VPoly::new(mles, 2, 3, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
+        let vpoly = VPoly::new(mles, 2, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
         let points = vec![
             Fields::Base(F::from_canonical_u64(1)),
             Fields::Base(F::from_canonical_u64(2)),
@@ -251,7 +251,7 @@ mod tests {
     #[test]
     fn test_sum_over_boolean_hypercube() {
         let mles = vec![f_abc(), f_abc(), f_abc()];
-        let vpoly = VPoly::new(mles, 2, 3, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
+        let vpoly = VPoly::new(mles, 2, Rc::new(combined_fn_1)); // combination => 2(a * b) + c
         assert_eq!(
             vpoly.sum_over_hypercube(),
             Fields::Extension(E::from_canonical_u64(86))
