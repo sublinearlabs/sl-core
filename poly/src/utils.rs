@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use p3_field::{ExtensionField, Field};
 
-use crate::{mle::MultilinearPoly, vpoly::VPoly, Fields};
+use crate::{Fields, mle::MultilinearPoly, vpoly::VPoly};
 
 /// Evaluate a univariate polynomial in evaluation form
 pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
@@ -65,7 +65,7 @@ pub fn generate_eq<F: Field, E: ExtensionField<F>>(points: &[Fields<F, E>]) -> V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
+    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
     use p3_mersenne_31::Mersenne31;
 
     #[test]
