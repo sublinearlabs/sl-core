@@ -52,7 +52,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, S: Sumcheckable<F, E>> Sumch
         if self.curr_round <= self.n {
             self.inner.round_message()
         } else {
-            (0..=self.max_var_degree() + 1)
+            (0..=self.max_var_degree())
                 .map(|i| Fields::Extension(E::from_canonical_usize(i) * self.eval.unwrap()))
                 .collect()
         }
