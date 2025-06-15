@@ -110,26 +110,7 @@ impl<F: Field, E: ExtensionField<F>> Neg for Fields<F, E> {
 
 impl<F: Field, E: ExtensionField<F>> AddAssign for Fields<F, E> {
     fn add_assign(&mut self, rhs: Self) {
-        match self {
-            Fields::Base(lhs) => match rhs {
-                Fields::Base(rhs_inner) => {
-                    *lhs += rhs_inner;
-                }
-                Fields::Extension(_) => {
-                    panic!(
-                        "Error encountered. Do 'rhs += lhs' instead or convert base field to extension field"
-                    );
-                }
-            },
-            Fields::Extension(lhs) => match rhs {
-                Fields::Base(rhs_inner) => {
-                    *lhs += rhs_inner;
-                }
-                Fields::Extension(rhs_inner) => {
-                    *lhs += rhs_inner;
-                }
-            },
-        }
+        *self = *self + rhs
     }
 }
 
@@ -310,13 +291,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_base_and_extension_fields_add_assign() {
         let ext_field_element = Fields::<F, E>::Extension(E::from_base(F::new(5)));
 
         let mut base_field_element = Fields::Base(F::new(2));
 
         base_field_element += ext_field_element;
+
+        assert_eq!(
+            base_field_element,
+            Fields::Extension(E::from_base(F::new(7)))
+        );
     }
 
     #[test]
