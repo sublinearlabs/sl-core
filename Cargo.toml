@@ -3,7 +3,7 @@ members = [
   "transcript",
   "poly",
   "iops/sum_check",
-  "circuits"]
+  "circuits", "fields"]
 
 resolver = "2"
 
