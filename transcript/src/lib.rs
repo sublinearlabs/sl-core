@@ -63,7 +63,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>> Transcript<F, E> {
 
 #[cfg(test)]
 pub mod tests {
-    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField, AbstractField};
+    use p3_field::{AbstractExtensionField, AbstractField, extension::BinomialExtensionField};
     use p3_mersenne_31::Mersenne31;
 
     use crate::Transcript;

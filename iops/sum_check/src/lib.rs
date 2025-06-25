@@ -7,7 +7,7 @@ pub mod sumcheckable;
 use crate::sumcheckable::Sumcheckable;
 use interface::SumCheckInterface;
 use p3_field::{ExtensionField, Field, PrimeField32};
-use poly::{utils::barycentric_evaluation, Fields};
+use poly::{Fields, utils::barycentric_evaluation};
 use primitives::SumCheckProof;
 use std::marker::PhantomData;
 use transcript::Transcript;
@@ -115,7 +115,7 @@ mod tests {
     use crate::{SumCheck, SumCheckInterface};
     use p3_field::extension::BinomialExtensionField;
     use p3_mersenne_31::Mersenne31;
-    use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
+    use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
     use transcript::Transcript;
 
     type F = Mersenne31;
