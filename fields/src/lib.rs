@@ -1,4 +1,6 @@
-use p3_field::ExtensionField;
+use p3_field::{ExtensionField, Field};
+use std::iter::Product;
+use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum Fields<F: Field, E: ExtensionField<F>> {
@@ -121,7 +123,8 @@ impl<F: Field, E: ExtensionField<F>> Product for Fields<F, E> {
 
 #[cfg(test)]
 mod tests {
-    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField};
+    use crate::Fields;
+    use p3_field::{AbstractExtensionField, extension::BinomialExtensionField};
     use p3_mersenne_31::Mersenne31;
     type F = Mersenne31;
     type E = BinomialExtensionField<F, 3>;

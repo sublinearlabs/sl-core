@@ -1,3 +1,6 @@
+pub use fields::Fields;
+use p3_field::{ExtensionField, Field, PrimeField32};
+
 pub mod mle;
 pub mod utils;
 pub mod vpoly;
