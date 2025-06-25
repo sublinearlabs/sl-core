@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use fields::Fields;
 use p3_challenger::{CanObserve, FieldChallenger, HashChallenger, SerializingChallenger32};
 use p3_field::{ExtensionField, Field, PrimeField32};
 use p3_keccak::Keccak256Hash;
@@ -19,8 +20,14 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>> Transcript<F, E> {
     }
 
     // Absorbs a byte array to the transcript
-    pub fn observe(&self, _message: &[u8]) {
-        todo!()
+    pub fn observe(&mut self, vals: &[Fields<F, E>]) {
+        for val in vals {
+            match val {
+                Fields::Base(_) => self
+                    .observe_base_element(&[val.to_base_field().expect("confirmed base element")]),
+                Fields::Extension(_) => self.observe_ext_element(&[val.to_extension_field()]),
+            }
+        }
     }
 
     // Absorbs an element from the base field to the transcript
@@ -56,7 +63,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>> Transcript<F, E> {
 
 #[cfg(test)]
 pub mod tests {
-    use p3_field::{AbstractExtensionField, AbstractField, extension::BinomialExtensionField};
+    use p3_field::{extension::BinomialExtensionField, AbstractExtensionField, AbstractField};
     use p3_mersenne_31::Mersenne31;
 
     use crate::Transcript;
