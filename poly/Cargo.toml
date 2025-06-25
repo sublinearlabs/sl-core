@@ -10,8 +10,9 @@ p3-field.workspace = true
 p3-mersenne-31.workspace = true
 p3-goldilocks = "0.2.0"
 
-# transcript
+fields = { path = "../fields" }
 transcript = { path = "../transcript" }
+
 
 [dev-dependencies]
 criterion = "0.5.1"

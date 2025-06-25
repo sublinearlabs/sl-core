@@ -120,12 +120,7 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for MultilinearP
     where
         F: p3_field::PrimeField32,
     {
-        for eval in &self.evaluations {
-            match eval {
-                Fields::Base(base_elem) => transcript.observe_base_element(&[*base_elem]),
-                Fields::Extension(ext_elem) => transcript.observe_ext_element(&[*ext_elem]),
-            }
-        }
+        transcript.observe(&self.evaluations);
     }
 }
 
