@@ -100,7 +100,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
                 claimed_sum,
                 round_poly[0].to_extension_field() + round_poly[1].to_extension_field()
             );
-            transcript.observe(&round_poly);
+            transcript.observe(round_poly);
             let challenge = Fields::Extension(transcript.sample_challenge());
             claimed_sum = barycentric_evaluation(round_poly, &challenge).to_extension_field();
             challenges.push(challenge);
