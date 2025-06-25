@@ -120,12 +120,7 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for MultilinearP
     where
         F: p3_field::PrimeField32,
     {
-        for eval in &self.evaluations {
-            match eval {
-                Fields::Base(base_elem) => transcript.observe_base_element(&[*base_elem]),
-                Fields::Extension(ext_elem) => transcript.observe_ext_element(&[*ext_elem]),
-            }
-        }
+        transcript.observe(&self.evaluations);
     }
 }
 
@@ -230,8 +225,8 @@ impl<F: Field, E: ExtensionField<F>> Mul<Fields<F, E>> for MultilinearPoly<F, E>
 #[cfg(test)]
 mod tests {
     use super::MultilinearPoly;
-    use crate::{MultilinearExtension, mle::Fields};
-    use p3_field::{AbstractField, extension::BinomialExtensionField};
+    use crate::{mle::Fields, MultilinearExtension};
+    use p3_field::{extension::BinomialExtensionField, AbstractField};
     use p3_goldilocks::Goldilocks as F;
 
     type E = BinomialExtensionField<F, 2>;

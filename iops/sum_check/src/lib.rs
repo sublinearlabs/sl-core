@@ -7,7 +7,7 @@ pub mod sumcheckable;
 use crate::sumcheckable::Sumcheckable;
 use interface::SumCheckInterface;
 use p3_field::{ExtensionField, Field, PrimeField32};
-use poly::{Fields, utils::barycentric_evaluation};
+use poly::{utils::barycentric_evaluation, Fields};
 use primitives::SumCheckProof;
 use std::marker::PhantomData;
 use transcript::Transcript;
@@ -32,7 +32,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
         polynomial.commit(transcript);
 
         // Append claimed sum to transcript
-        transcript.observe_ext_element(&[claimed_sum.to_extension_field()]);
+        transcript.observe(&[claimed_sum]);
 
         SumCheck::<F, E, T>::prove_partial(claimed_sum, &mut polynomial, transcript)
     }
@@ -46,7 +46,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
         polynomial.commit(transcript);
 
         // Appends the claimed sum to the transcript
-        transcript.observe_ext_element(&[proof.claimed_sum.to_extension_field()]);
+        transcript.observe(&[proof.claimed_sum]);
 
         // Perform round by round verification
         let (claimed_sum, challenges) = SumCheck::<F, E, T>::verify_partial(proof, transcript);
@@ -72,12 +72,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
 
         for _ in 0..polynomial.no_of_rounds() {
             let round_message = polynomial.round_message();
-            transcript.observe_ext_element(
-                &round_message
-                    .iter()
-                    .map(|val| val.to_extension_field())
-                    .collect::<Vec<E>>(),
-            );
+            transcript.observe(&round_message);
             let challenge = Fields::Extension(transcript.sample_challenge());
             polynomial.receive_challenge(&challenge);
             round_polynomials.push(round_message);
@@ -105,12 +100,7 @@ impl<F: Field + PrimeField32, E: ExtensionField<F>, T: Sumcheckable<F, E> + Clon
                 claimed_sum,
                 round_poly[0].to_extension_field() + round_poly[1].to_extension_field()
             );
-            transcript.observe_ext_element(
-                &round_poly
-                    .iter()
-                    .map(|val| val.to_extension_field())
-                    .collect::<Vec<E>>(),
-            );
+            transcript.observe(&round_poly);
             let challenge = Fields::Extension(transcript.sample_challenge());
             claimed_sum = barycentric_evaluation(round_poly, &challenge).to_extension_field();
             challenges.push(challenge);
@@ -125,7 +115,7 @@ mod tests {
     use crate::{SumCheck, SumCheckInterface};
     use p3_field::extension::BinomialExtensionField;
     use p3_mersenne_31::Mersenne31;
-    use poly::{Fields, MultilinearExtension, mle::MultilinearPoly};
+    use poly::{mle::MultilinearPoly, Fields, MultilinearExtension};
     use transcript::Transcript;
 
     type F = Mersenne31;
