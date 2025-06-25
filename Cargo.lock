@@ -205,6 +205,9 @@ dependencies = [
 [[package]]
 name = "fields"
 version = "0.1.0"
+dependencies = [
+ "p3-field 0.2.0",
+]
 
 [[package]]
 name = "forward_ref"
