@@ -178,7 +178,7 @@ The project includes GitHub Actions workflows for:
 
 ```
 sl-core/
-├── circuits/          # Circuit representations and GKR support
+├── circuits/          # Circuit representations and GKR, Libra, Virgo, support
 ├── fields/           # Unified field arithmetic
 ├── poly/             # Polynomial operations and MLE
 ├── iops/
