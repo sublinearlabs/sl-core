@@ -1,3 +1,4 @@
+//! Padded Sumcheck Implementation
 use std::marker::PhantomData;
 
 use crate::Fields;
