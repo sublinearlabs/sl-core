@@ -203,6 +203,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fields"
+version = "0.1.0"
+dependencies = [
+ "p3-field 0.2.0",
+ "p3-mersenne-31",
+]
+
+[[package]]
 name = "forward_ref"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -855,6 +863,7 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "ff_ext",
+ "fields",
  "multilinear_extensions",
  "p3",
  "p3-challenger 0.2.0",
@@ -1108,6 +1117,7 @@ dependencies = [
 name = "transcript"
 version = "0.1.0"
 dependencies = [
+ "fields",
  "p3-challenger 0.2.0",
  "p3-field 0.2.0",
  "p3-keccak",

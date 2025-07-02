@@ -16,10 +16,29 @@ impl<F: Field, E: ExtensionField<F>> MultilinearPoly<F, E> {
     /// Instantiates a `MultilinearPoly` from a vec of field elements
     pub fn new_from_vec(n_vars: usize, evaluations: Vec<Fields<F, E>>) -> Self {
         // assert that the number of variables matches the number of evaluations
+        assert_ne!(evaluations.len(), 0);
         assert_eq!(1 << n_vars, evaluations.len());
         Self {
             evaluations,
             n_vars,
+        }
+    }
+
+    /// Instantiates a new `MultilinearPoly` pads with some given element until a power of two size
+    pub fn new_extend_to_power_of_two(
+        mut evaluations: Vec<Fields<F, E>>,
+        pad_element: Fields<F, E>,
+    ) -> Self {
+        assert_ne!(evaluations.len(), 0);
+        let target_size = if evaluations.len() == 1 {
+            2
+        } else {
+            evaluations.len().next_power_of_two()
+        };
+        evaluations.resize(target_size, pad_element);
+        Self {
+            evaluations,
+            n_vars: target_size.ilog2() as usize,
         }
     }
 
@@ -101,12 +120,7 @@ impl<F: Field, E: ExtensionField<F>> MultilinearExtension<F, E> for MultilinearP
     where
         F: p3_field::PrimeField32,
     {
-        for eval in &self.evaluations {
-            match eval {
-                Fields::Base(base_elem) => transcript.observe_base_element(&[*base_elem]),
-                Fields::Extension(ext_elem) => transcript.observe_ext_element(&[*ext_elem]),
-            }
-        }
+        transcript.observe(&self.evaluations);
     }
 }
 
@@ -125,6 +139,21 @@ impl<F: Field, E: ExtensionField<F>> From<Vec<E>> for MultilinearPoly<F, E> {
             .into_iter()
             .map(|eval| Fields::Extension(eval))
             .collect();
+        MultilinearPoly {
+            n_vars,
+            evaluations,
+        }
+    }
+}
+
+impl<F: Field, E: ExtensionField<F>> From<&Vec<F>> for MultilinearPoly<F, E> {
+    fn from(evaluations: &Vec<F>) -> Self {
+        let n_vars = (evaluations.len() as f64).log2() as usize;
+        let evaluations = evaluations
+            .iter()
+            .map(|&x| Fields::<F, E>::Base(x))
+            .collect::<Vec<_>>();
+
         MultilinearPoly {
             n_vars,
             evaluations,
@@ -202,6 +231,12 @@ mod tests {
 
     type E = BinomialExtensionField<F, 2>;
 
+    fn to_fields(vals: Vec<u64>) -> Vec<Fields<F, E>> {
+        vals.into_iter()
+            .map(|v| Fields::<F, E>::Base(F::from_canonical_u64(v)))
+            .collect()
+    }
+
     fn f_abc() -> MultilinearPoly<F, E> {
         MultilinearPoly::new_from_vec(
             3,
@@ -215,6 +250,49 @@ mod tests {
     #[test]
     fn test_mle_from_vec() {
         let _ = f_abc();
+    }
+
+    #[test]
+    fn test_new_mle_from_non_power_of_two() {
+        let mle = MultilinearPoly::new_extend_to_power_of_two(
+            vec![0, 0, 0, 3, 0, 0, 2, 5]
+                .into_iter()
+                .map(|val| Fields::Base(F::from_canonical_u64(val)))
+                .collect::<Vec<Fields<F, E>>>(),
+            Fields::Base(F::zero()),
+        );
+        assert_eq!(mle.num_vars(), 3);
+
+        // remove two elements
+        let mle = MultilinearPoly::new_extend_to_power_of_two(
+            vec![0, 0, 0, 3, 0, 0]
+                .into_iter()
+                .map(|val| Fields::Base(F::from_canonical_u64(val)))
+                .collect::<Vec<Fields<F, E>>>(),
+            Fields::Base(F::zero()),
+        );
+        assert_eq!(mle.num_vars(), 3);
+        assert_eq!(mle.evaluations.len(), 8);
+        assert_eq!(mle.evaluations[6], Fields::Base(F::from_canonical_u64(0)));
+        assert_eq!(mle.evaluations[7], Fields::Base(F::from_canonical_u64(0)));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_new_with_extend_empty_eval() {
+        let _ = MultilinearPoly::new_extend_to_power_of_two(
+            vec![],
+            Fields::<F, E>::Base(F::from_canonical_usize(0)),
+        );
+    }
+
+    #[test]
+    fn test_new_with_extend_single_eval() {
+        let mle = MultilinearPoly::new_extend_to_power_of_two(
+            to_fields(vec![1]),
+            Fields::Base(F::from_canonical_usize(0)),
+        );
+        assert_eq!(mle.num_vars(), 1);
     }
 
     #[test]

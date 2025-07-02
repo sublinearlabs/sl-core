@@ -1,8 +1,10 @@
+use std::rc::Rc;
+
 use p3_field::{ExtensionField, Field};
 
-use crate::Fields;
+use crate::{Fields, mle::MultilinearPoly, vpoly::VPoly};
 
-// Evaluate a univariate polynomial in evaluation form
+/// Evaluate a univariate polynomial in evaluation form
 pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
     evaluations: &[Fields<F, E>],
     evaluation_point: &Fields<F, E>,
@@ -30,6 +32,34 @@ pub fn barycentric_evaluation<F: Field, E: ExtensionField<F>>(
     }
 
     Fields::Extension(m_x * res)
+}
+
+/// Helper function to build a Vpoly that combines via product
+pub fn product_poly<F: Field, E: ExtensionField<F>>(
+    mles: Vec<MultilinearPoly<F, E>>,
+) -> VPoly<F, E> {
+    let max_degree = mles.len();
+    VPoly::new(
+        mles,
+        max_degree,
+        Rc::new(|values: &[Fields<F, E>]| values.iter().cloned().product()),
+    )
+}
+
+/// Generates eq(r, x) where eq(..) represents the multilinear extension of the identity polynomial
+pub fn generate_eq<F: Field, E: ExtensionField<F>>(points: &[Fields<F, E>]) -> Vec<Fields<F, E>> {
+    let mut res = vec![Fields::Extension(E::one())];
+
+    for point in points {
+        let mut v = vec![];
+        for val in &res {
+            v.push(*val * (Fields::Extension(E::one()) - *point));
+            v.push(*val * *point);
+        }
+        res = v;
+    }
+
+    res
 }
 
 #[cfg(test)]
