@@ -34,7 +34,7 @@ impl LayeredCircuit {
             for gate_index in 0..number_of_gates {
                 let input_1 = (gate_index * 2) % number_of_inputs;
                 let input_2 = (gate_index * 2 + 1) % number_of_inputs;
-                let g_type = if layer_index % 2 == 0 {
+                let g_type = if layer_index.is_multiple_of(2) {
                     GateOp::Add
                 } else {
                     GateOp::Mul
